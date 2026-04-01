@@ -1,23 +1,68 @@
 class Renderer {
     constructor(state) {
         this.s = state;
+        this.failedImageSrcs = new Set();
     }
 
-    fixImagePath(path) {
-        if (!path) return path;
+    getImagePathCandidates(path) {
+        if (!path) return [];
         if (path.startsWith('http') || path.startsWith('data:')) {
             if (path.includes('drive.google.com')) {
                 if (!path.includes('thumbnail?')) {
                     const fileIdMatch = path.match(/\/d\/([a-zA-Z0-9_-]+)/) || path.match(/[?&]id=([a-zA-Z0-9_-]+)/);
                     if (fileIdMatch) {
-                        return `https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1200`;
+                        return [`https://drive.google.com/thumbnail?id=${fileIdMatch[1]}&sz=w1200`];
                     }
                 }
             }
-            return path;
+            return [path];
         }
-        if (path.startsWith('../')) return encodeURI(path);
-        return '../' + encodeURI(path);
+
+        const rawPath = String(path);
+        const appRoot = String(this.s.appRoot || '').replace(/\/+$/, '');
+        if (rawPath.startsWith('/')) {
+            const absolute = encodeURI(rawPath);
+            const candidates = [absolute];
+            if (appRoot && !absolute.startsWith(`${appRoot}/`) && absolute !== appRoot) {
+                candidates.push(`${appRoot}${absolute}`);
+            }
+            return [...new Set(candidates.filter(Boolean))];
+        }
+
+        const cleaned = rawPath
+            .replace(/^\.\//, '')
+            .replace(/^\.\.\//, '')
+            .replace(/^\/+/, '');
+        const encoded = encodeURI(cleaned);
+        const candidates = [];
+
+        if (appRoot) {
+            candidates.push(`${appRoot}/${encoded}`);
+        }
+
+        candidates.push(`/${encoded}`);
+        candidates.push(encoded);
+
+        const scriptEl = document.currentScript || document.querySelector('script[src*="/js/bundle.min.js"], script[src*="/js/main.js"]');
+        const scriptSrc = scriptEl && scriptEl.getAttribute ? String(scriptEl.getAttribute('src') || '') : '';
+        if (!appRoot && scriptSrc.startsWith('/')) {
+            const scriptPath = scriptSrc.split('?')[0];
+            const marker = '/js/';
+            const markerIndex = scriptPath.indexOf(marker);
+            if (markerIndex > 0) {
+                const inferredRoot = scriptPath.slice(0, markerIndex).replace(/\/+$/, '');
+                if (inferredRoot) {
+                    candidates.push(`${inferredRoot}/${encoded}`);
+                }
+            }
+        }
+
+        return [...new Set(candidates.filter(Boolean))];
+    }
+
+    fixImagePath(path) {
+        const candidates = this.getImagePathCandidates(path);
+        return candidates[0] || path;
     }
 
     showSkeletons(container, count) {
@@ -127,12 +172,17 @@ class Renderer {
 
                     const youtubeID = Utils.extractYouTubeID(project.youtube || '');
                     const hasValidYoutube = youtubeID && youtubeID.trim() !== "" && youtubeID !== "YOUTUBE_ID_HERE";
-                    const galleryThumb = project.gallery?.[0] ? this.fixImagePath(project.gallery[0]) : '';
-                    
-                    let thumbSrc = project.resolvedThumb ? this.fixImagePath(project.resolvedThumb) : '';
-                    if (!thumbSrc && hasValidYoutube) {
-                        thumbSrc = `https://i.ytimg.com/vi/${youtubeID}/hqdefault.jpg`;
-                    } else if (!thumbSrc) {
+                    const galleryThumbCandidates = project.gallery?.[0] ? this.getImagePathCandidates(project.gallery[0]) : [];
+                    const galleryThumb = galleryThumbCandidates.find(src => !this.failedImageSrcs.has(src)) || galleryThumbCandidates[0] || '';
+
+                    let thumbCandidates = project.resolvedThumb ? this.getImagePathCandidates(project.resolvedThumb) : [];
+                    if (!thumbCandidates.length && hasValidYoutube) {
+                        thumbCandidates = [`https://i.ytimg.com/vi/${youtubeID}/hqdefault.jpg`];
+                    } else if (!thumbCandidates.length) {
+                        thumbCandidates = galleryThumbCandidates;
+                    }
+                    let thumbSrc = thumbCandidates.find(src => !this.failedImageSrcs.has(src)) || thumbCandidates[0] || '';
+                    if (!thumbSrc && galleryThumb) {
                         thumbSrc = galleryThumb;
                     }
 
@@ -173,7 +223,12 @@ class Renderer {
                             ${awardsHTML ? `<div class="card-awards">${awardsHTML}</div>` : ''}
                         </div>`;
                     
+                    const thisRenderer = this;
                     const preloadImg = new Image();
+                    const preloadCandidates = [...new Set([...(thumbCandidates || []), ...(galleryThumbCandidates || [])].filter(Boolean))];
+                    preloadImg._candidateList = preloadCandidates;
+                    preloadImg._candidateIndex = Math.max(0, preloadCandidates.indexOf(thumbSrc));
+
                     preloadImg.onload = function() {
                         if (this.naturalWidth === 120 && this.naturalHeight === 90 && galleryThumb && !this.src.includes(galleryThumb)) {
                             this.src = galleryThumb;
@@ -184,11 +239,26 @@ class Renderer {
                         resolve(card);
                     };
                     preloadImg.onerror = function() {
-                        if (galleryThumb && !this.src.includes(galleryThumb)) {
-                            this.src = galleryThumb;
+                        if (this.src) {
+                            const normalizedFailed = this.src.replace(window.location.origin, '');
+                            if (normalizedFailed) {
+                                thisRenderer.failedImageSrcs.add(normalizedFailed);
+                            }
+                            thisRenderer.failedImageSrcs.add(this.src);
+                        }
+
+                        const list = Array.isArray(this._candidateList) ? this._candidateList : [];
+                        const currentIndex = Number.isInteger(this._candidateIndex) ? this._candidateIndex : -1;
+                        const nextCandidate = list.slice(currentIndex + 1).find(src => !thisRenderer.failedImageSrcs.has(src));
+
+                        if (nextCandidate) {
+                            this._candidateIndex = list.indexOf(nextCandidate);
+                            this.src = nextCandidate;
                             const cardImg = card.querySelector('img');
-                            if (cardImg) cardImg.src = galleryThumb;
+                            if (cardImg) cardImg.src = nextCandidate;
                         } else {
+                            const cardImg = card.querySelector('img');
+                            if (cardImg) cardImg.removeAttribute('src');
                             resolve(card);
                         }
                     };

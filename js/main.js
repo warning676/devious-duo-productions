@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     applyRedirectPath();
     const appRoot = resolveAppRoot(window.location.pathname);
+    state.appRoot = appRoot;
 
     const stripAppRoot = (pathname) => {
         if (appRoot && pathname.startsWith(appRoot)) {

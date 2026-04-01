@@ -74,6 +74,7 @@ class ModalManager {
 
     fixImagePath(path) {
         if (!path) return path;
+        const rawPath = String(path);
         if (path.startsWith('http') || path.startsWith('data:')) {
             if (path.includes('drive.google.com')) {
                 if (!path.includes('thumbnail?')) {
@@ -85,8 +86,20 @@ class ModalManager {
             }
             return path;
         }
-        if (path.startsWith('../')) return encodeURI(path);
-        return '../' + encodeURI(path);
+        if (rawPath.startsWith('../')) return encodeURI(rawPath);
+        const appRoot = String(this.s.appRoot || '').replace(/\/+$/, '');
+        if (rawPath.startsWith('/')) {
+            const absolute = encodeURI(rawPath);
+            if (appRoot && (absolute === appRoot || absolute.startsWith(`${appRoot}/`))) {
+                return absolute;
+            }
+            return appRoot ? `${appRoot}${absolute}` : absolute;
+        }
+        const cleanPath = rawPath.replace(/^\/+/, '');
+        if (appRoot) {
+            return `${appRoot}/${encodeURI(cleanPath)}`;
+        }
+        return `/${encodeURI(cleanPath)}`;
     }
 
     delay(ms) {

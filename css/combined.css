@@ -3179,8 +3179,15 @@ body.dropdown-scroll-lock {
 
 .search-close-btn:hover {
     background-color: var(--button-hover-bg);
-    border-color: #ff1f1f;
+    border-color: transparent;
     color: #e1e4e8;
+}
+
+.search-close-btn:focus,
+.search-close-btn:focus-visible {
+    outline: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .search-close-btn:active {
@@ -3200,14 +3207,35 @@ body.dropdown-scroll-lock {
     border-radius: 6px;
     margin-bottom: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: border-color 0.3s ease;
     background: var(--surface-gradient-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+.search-result-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255, 31, 31, 0.08) 0%, rgba(255, 31, 31, 0.18) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+    border-radius: 6px;
+}
+
+.search-result-item > * {
+    position: relative;
+    z-index: 2;
 }
 
 .search-result-item:hover {
-    background-color: #161b22;
-    border-color: #ff1f1f;
-    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.1);
+    border-color: #ff1f1f !important;
+}
+
+.search-result-item:hover::before {
+    opacity: 1;
 }
 
 .search-result-main {
@@ -3292,7 +3320,7 @@ body.dropdown-scroll-lock {
 .search-result-type.type-skill {
     background-color: rgba(88, 166, 255, 0.2);
     border: 1px solid rgba(88, 166, 255, 0.5);
-    color: #ff1f1f;
+    color: #58a6ff;
 }
 
 .search-result-type.type-achievement {
