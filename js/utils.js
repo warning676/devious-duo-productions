@@ -154,7 +154,6 @@ class Utils {
             { id: 'global-search-modal', check: (el) => el.classList.contains('active') },
             { id: 'infoModal', check: (el) => el.style.display === 'flex' },
             { id: 'secondaryModal', check: (el) => el.style.display === 'flex' },
-            { id: 'courses-modal', check: (el) => el.style.display === 'flex' },
             { id: 'external-link-modal', check: (el) => el.classList.contains('active') || el.style.display === 'flex' }
         ];
 

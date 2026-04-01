@@ -1,385 +1,235 @@
-const SHEET_CACHE_TTL_MS = 1000 * 60 * 15;
+const LOCAL_DATA = {
+    videos: [
+        {
+            name: 'Toothbrush Chronicles: Super Hill',
+            badge: 'Film Festival',
+            date: 'May 31, 2025',
+            info: 'A prequel featuring a significantly larger scope. Unreal Engine 5 was utilized to create the environments, effects, and MetaHumans for the characters.',  
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Adobe Photoshop, Unreal Engine 5',
+            youtube: 'KdGH6zSjoBA',
+            gallery: ['images/video-projects/superhill/superhill_01.webp', 'images/video-projects/superhill/superhill_02.webp', 'images/video-projects/superhill/superhill_03.webp'],
+            awards: [
+                { award: 'Video of the Year', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2025' },
+                { award: 'Best Use of Dialogue', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2025' }
+            ]
+        },
+        {
+            name: 'House of Horrors',
+            badge: 'Film Festival',
+            date: 'April 1, 2025',
+            info: 'A video created using an Unreal Engine 5 game prototype as its foundation.', 
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Unreal Engine 5',
+            youtube: 'n16hGIjFj5g',
+            gallery: ['images/video-projects/horrors/horrors_01.webp', 'images/video-projects/horrors/horrors_02.webp', 'images/video-projects/horrors/horrors_03.webp'],
+            awards: [
+                { award: 'Best Short Film', location: 'Emerald Ridge High School | Clock Tower Film Festival', date: 'April 2025' }
+            ]
+        },
+        {
+            name: 'House of Pain - Jump Around',
+            badge: 'Film Festival',
+            date: 'January 25, 2025',
+            info: 'A 90s-themed music video created using Unreal Engine 5, featuring comprehensive editing and cinematography work.',
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Adobe Photoshop, Unreal Engine 5',
+            youtube: 'qXDePSHjFlc',
+            gallery: ['images/video-projects/jump/jump_01.webp', 'images/video-projects/jump/jump_02.webp', 'images/video-projects/jump/jump_03.webp'],
+            awards: [
+                { award: 'Video of the Year', location: 'Rogers High School | 86th Avenue Film Festival', date: 'January 2025' }
+            ]
+        },
+        {
+            name: 'Two Highschoolers Fight Using Toothbrushes',
+            badge: 'Film Festival',
+            date: 'May 30, 2024',
+            info: 'An early video featuring experimentation with After Effects and various visual effects techniques.',
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Adobe Photoshop',
+            youtube: '1-UaMcezN9c',
+            gallery: ['images/video-projects/toothbrush/toothbrush_01.webp', 'images/video-projects/toothbrush/toothbrush_02.webp', 'images/video-projects/toothbrush/toothbrush_03.webp'],
+            awards: [
+                { award: 'Best Editing', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2024' },
+                { award: 'Best Use of Prop', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2024' }
+            ]
+        },
+        {
+            name: 'Hill-lucinations',
+            badge: 'Assignment',
+            date: 'November 14, 2024',
+            info: 'A video showcasing color grading techniques and the integration of 3D models within After Effects.',
+            tools: 'Adobe Premiere Pro, Adobe After Effects',
+            youtube: 'SyMaYSVeTHM',
+            gallery: ['images/video-projects/hill/hill_01.webp', 'images/video-projects/hill/hill_02.webp', 'images/video-projects/hill/hill_03.webp']
+        },
+        {
+            name: 'Emerald Vision: A Very Devious Christmas',
+            badge: 'Emerald Vision',
+            date: 'December 18, 2024',
+            info: 'The second installment of Emerald Vision featuring an expanded scope. Unreal Engine 5 was utilized for environments and effects.', 
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Adobe Photoshop, Unreal Engine 5',
+            youtube: '-yTMd0Ur_bI',
+            gallery: ['images/video-projects/ev2/ev2_01.webp', 'images/video-projects/ev2/ev2_02.webp', 'images/video-projects/ev2/ev2_03.webp']
+        },
+        {
+            name: 'Emerald Vision: Devious Edition',
+            badge: 'Emerald Vision',
+            date: 'October 16, 2024',
+            info: 'The first installment of Emerald Vision, a school TV program episode created as a complete production without additional team support.', 
+            tools: 'Adobe Premiere Pro, Adobe After Effects, Adobe Photoshop, Adobe Illustrator',
+            youtube: '4z15MirOQoc',
+            gallery: ['images/video-projects/ev1/ev1_01.webp', 'images/video-projects/ev1/ev1_02.webp', 'images/video-projects/ev1/ev1_03.webp']
+        },
+        {
+            name: 'MrBeast Burger in Ohio (BEN VERSION)',
+            badge: 'Film Festival',
+            date: 'January 27, 2023',
+            info: 'An early film festival entry that gained recognition. The video was later uploaded to YouTube.', 
+            tools: 'Adobe Premiere Pro',
+            youtube: 'aj8aV6UFJ5w',
+            gallery: ['images/video-projects/mrbeast/mrbeast_01.webp', 'images/video-projects/mrbeast/mrbeast_02.webp', 'images/video-projects/mrbeast/mrbeast_03.webp'],
+            awards: [
+                { award: 'Video of the Year', location: 'Rogers High School | 86th Avenue Film Festival', date: 'January 2023' }
+            ]
+        },
+        {
+            name: 'PopCorners V2',
+            badge: 'Assignment',
+            date: 'June 16, 2023',
+            info: 'A video recreation later uploaded to YouTube.', 
+            tools: 'Adobe Premiere Pro',
+            youtube: 'HuvDKhqiqAw',
+            gallery: ['images/video-projects/popcorners/popcorners_01.webp', 'images/video-projects/popcorners/popcorners_02.webp', 'images/video-projects/popcorners/popcorners_03.webp']
+        },
+        {
+            name: 'Interview with Detective Bond',
+            badge: 'Assignment',
+            date: 'February 21, 2024',
+            info: 'More of an interview style video with a tense atmoshpere.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'KK6KzJO9T_U',
+            gallery: ['images/video-projects/detective/detective_01.webp', 'images/video-projects/detective/detective_02.webp', 'images/video-projects/detective/detective_03.webp']
+        },
+        {
+            name: 'The Grade Collector',
+            badge: 'Assignment',
+            date: 'February 3, 2024',
+            info: 'Vertical format content created for an assignment.', 
+            tools: 'Adobe Premiere Pro',
+            youtube: 'v-W5GEy5dUU',
+            gallery: []
+        }
+    ],
+    games: [
+        {
+            name: 'Craig of the Hills',
+            badge: 'PowerPoint Game',
+            date: 'September 18, 2023',
+            info: 'Craig of the Hills is made entirely in PowerPoint. We believe it is the longest PowerPoint game ever made. No VBA code either. Playable date: Pre-release Teaser out now (link currently unavailable). Full release date: None for the foreseeable future. Yes, lots of AI! Sorry we are not artists (yet)!',
+            tools: 'Microsoft PowerPoint',
+            youtube: '',
+            gallery: [
+                'images/game-projects/craig-of-the-hills/craig-of-the-hills_01.png',
+                'images/game-projects/craig-of-the-hills/craig-of-the-hills_02.png'
+            ]
+        },
+        {
+            name: 'The Secret of Craig Hill',
+            badge: 'Prototype',
+            date: 'January 8, 2025',
+            info: 'A horror game created in Unreal Engine 5 featuring comprehensive programming, audio implementation, and extensive level design.',  
+            tools: 'Unreal Engine 5, Blueprints',
+            youtube: '',
+            gallery: ['images/game-projects/secret/secret_01.webp', 'images/game-projects/secret/secret_02.webp']
+        },
+        {
+            name: 'House of Horrors',
+            badge: 'Prototype',
+            date: 'February 2, 2025',
+            info: 'A retro-styled horror game prototype that became the foundation for a video project. Video footage was imported into the Unreal Engine project for further development.',
+            tools: 'Unreal Engine 5, Blueprints',
+            youtube: '',
+            gallery: [
+                'images/game-projects/horrors-game/horrors-game_01.webp',
+                'images/game-projects/horrors-game/horrors-game_02.webp',
+                'images/game-projects/horrors-game/horrors-game_03.webp',
+                'images/game-projects/horrors-game/horrors-game_04.webp',
+                'images/game-projects/horrors-game/horrors-game_05.webp',
+                'images/game-projects/horrors-game/horrors-game_06.webp',
+                'images/game-projects/horrors-game/horrors-game_07.webp',
+                'images/game-projects/horrors-game/horrors-game_08.webp',
+                'images/game-projects/horrors-game/horrors-game_09.webp',
+                'images/game-projects/horrors-game/horrors-game_10.webp',
+                'images/game-projects/horrors-game/horrors-game_11.webp'
+            ]
+        }
+    ],
+    skills: [
+        { name: 'Adobe Premiere Pro', badge: 'Editing', info: 'Used across project cuts, sequencing, audio editing, and final delivery.', icon: 'images/skills/icon-pr.webp' },
+        { name: 'FL Studio', badge: 'Audio', info: 'Used to modify audio elements for sound effects and other audio work in video and game projects.', icon: 'images/skills/icon-fl-studio.webp' },
+        { name: 'Adobe After Effects', badge: 'VFX and Motion', info: 'Used for compositing, effects, and motion-driven sequences.', icon: 'images/skills/icon-ae.webp' },
+        { name: 'Adobe Photoshop', badge: 'Design', info: 'Used for visual assets and supporting graphics.', icon: 'images/skills/icon-ps.webp' },
+        { name: 'Adobe Illustrator', badge: 'Design', info: 'Used for vector artwork and title/logo elements.', icon: 'images/skills/icon-ai.webp' },
+        { name: 'Microsoft PowerPoint', badge: 'Game Development', info: 'Used to build Craig of the Hills as an interactive PowerPoint game and to make thumbnails for videos.', icon: 'images/skills/icon-powerpoint.webp' },
+        { name: 'Unreal Engine 5', badge: 'Real-Time Production', info: 'Used for environments, effects, and character-driven scenes.', icon: 'images/skills/icon-ue5.webp' },
+        { name: 'Blueprints', badge: 'Game Development', info: 'Used for gameplay scripting and interaction logic in Unreal Engine 5 projects.', icon: 'images/skills/icon-ue5.webp' },
+        { name: 'Unity', badge: 'Game Development', info: 'Used for prototype scenes and gameplay experiments.', icon: 'images/skills/icon-unity.webp' }
+    ],
+    Activities: [
+        {
+            name: 'Emerald Vision',
+            school: 'Emerald Ridge High School',
+            type: 'Media',
+            info: 'Emerald Vision is Emerald Ridge High School\'s news program. Two full-length episodes and multiple segments were created and produced for the program.', 
+            started: 'September 2023',
+            ended: 'June 2025',
+            link: 'https://www.youtube.com/@emeraldridgemediacenter8488'
+        }
+    ],
+    Achievements: [],
+    School: []
+};
 
 class DataService {
-    constructor(spreadsheetId) {
-        this.spreadsheetId = spreadsheetId;
-        this.connectionSamples = [];
-        this.lastConnectionState = null;
-    }
-
-    recordConnectionSample(durationMs, fromCache = false, hadError = false) {
-        const sample = {
-            durationMs: Number.isFinite(durationMs) ? durationMs : null,
-            fromCache,
-            hadError,
-            at: Date.now()
-        };
-        this.lastConnectionState = sample;
-        if (Number.isFinite(sample.durationMs)) {
-            this.connectionSamples.push(sample.durationMs);
-            if (this.connectionSamples.length > 8) {
-                this.connectionSamples.shift();
-            }
-        }
-    }
-
-    getAverageConnectionMs() {
-        if (!this.connectionSamples.length) return null;
-        const total = this.connectionSamples.reduce((sum, v) => sum + v, 0);
-        return total / this.connectionSamples.length;
-    }
-
-    resolveConnectionQuality() {
-        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-            return { label: 'Offline', key: 'offline' };
-        }
-
-        if (this.lastConnectionState && this.lastConnectionState.fromCache && this.lastConnectionState.hadError) {
-            return { label: 'Poor', key: 'poor' };
-        }
-
-        const avgMs = this.getAverageConnectionMs();
-        if (Number.isFinite(avgMs)) {
-            if (avgMs <= 1200) return { label: 'Good', key: 'good' };
-            return { label: 'Poor', key: 'poor' };
-        }
-
-        const connection = typeof navigator !== 'undefined' ? navigator.connection || navigator.mozConnection || navigator.webkitConnection : null;
-        const type = connection && connection.effectiveType ? String(connection.effectiveType).toLowerCase() : '';
-        if (type === '4g') return { label: 'Good', key: 'good' };
-        if (type === '3g' || type === '2g' || type === 'slow-2g') return { label: 'Poor', key: 'poor' };
-
-        return { label: 'Good', key: 'good' };
-    }
-
-    updateConnectionStatus() {
-        const statusElement = document.getElementById('db-connection-quality');
-        if (!statusElement) return;
-
-        const quality = this.resolveConnectionQuality();
-        statusElement.textContent = quality.label;
-        statusElement.className = `connection-status${quality.key ? ` ${quality.key}` : ''}`;
-    }
-
-    startConnectionStatusUpdates() {
-        this.updateConnectionStatus();
-        setInterval(() => this.updateConnectionStatus(), 10000);
-    }
-
-    convertGoogleDriveUrl(url) {
-        if (!url) return null;
-        if (!url.includes('drive.google.com')) return url;
-
-        const fileIdMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-        if (fileIdMatch) {
-            const fileId = fileIdMatch[1];
-            return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
-        }
-        return url;
-    }
-
-    normalizePath(path, sheetName) {
-        if (!path) return path;
-        path = path.replace(/\\/g, '/');
-
-        if (sheetName === 'videos') {
-            path = path.replace(/Images\/Videos\//i, 'Images/videos/');
-        } else if (sheetName === 'games') {
-            path = path.replace(/Images\/Games\//i, 'Images/games/');
-        }
-
-        return path;
-    }
-
-    parseAwards(awardsString) {
-        if (!awardsString) return [];
-
-        const awards = [];
-        const awardParts = awardsString.split(',');
-
-        for (const part of awardParts) {
-            const trimmed = part.trim();
-            if (!trimmed) continue;
-
-            const awardMatch = trimmed.match(/Award:\s*([^|]+)/);
-            const locationMatch = trimmed.match(/Location:\s*(.+?)\s*\|\s*Date:/);
-            const dateMatch = trimmed.match(/Date:\s*(.+)$/);
-
-            if (awardMatch && locationMatch && dateMatch) {
-                awards.push({
-                    award: awardMatch[1].trim(),
-                    location: locationMatch[1].trim(),
-                    date: dateMatch[1].trim().toUpperCase()
-                });
-            }
-        }
-
-        return awards;
+    constructor() {
+        this.data = { ...LOCAL_DATA };
     }
 
     buildFilmFestivalAwards(videosData) {
         const awards = {};
         if (!Array.isArray(videosData)) return awards;
-
-        videosData.forEach(video => {
-            if (video.name && Array.isArray(video.awards) && video.awards.length > 0) {
+        videosData.forEach((video) => {
+            if (video && video.name && Array.isArray(video.awards) && video.awards.length > 0) {
                 awards[video.name] = video.awards;
             }
         });
-
         return awards;
     }
 
-    async fetchLastUpdated() {
-        const dateElement = document.getElementById('last-updated-date');
-        if (!dateElement) return;
-        let cachedDate = null;
-        try {
-            cachedDate = localStorage.getItem('lastUpdatedOnGithub') || null;
-        } catch (err) {
-            cachedDate = null;
-        }
-        if (cachedDate) dateElement.textContent = cachedDate;
-        try {
-            const response = await fetch('https://api.github.com/repos/warning676/resume/commits/main');
-            const data = await response.json();
-            const date = new Date(data.commit.committer.date);
-            const formattedDate = date.toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric'
-            });
-            if (formattedDate === cachedDate) return;
-            dateElement.textContent = formattedDate;
-            try {
-                localStorage.setItem('lastUpdatedOnGithub', formattedDate);
-            } catch (err) {
-            }
-        } catch (err) {
-            if (!cachedDate) dateElement.textContent = "Recently";
-        }
-    }
-
-    updateCurrentTime() {
-        const timeElement = document.getElementById('current-time');
-        if (!timeElement) return;
-
-        const now = new Date();
-        const options = {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-        };
-
-        timeElement.textContent = now.toLocaleString('en-US', options);
-    }
-
-    startTimeUpdates() {
-        this.updateCurrentTime();
-        
-        const syncTime = () => {
-            this.updateCurrentTime();
-            setInterval(() => this.updateCurrentTime(), 60000);
-        };
-        
-        const now = new Date();
-        const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-        setTimeout(syncTime, msUntilNextMinute);
-    }
-
     async loadSheet(sheetName) {
-        const cacheKey = `sheet_${sheetName}`;
-        const timestampKey = `sheet_${sheetName}_ts`;
-
-        let cachedData = null;
-        let cachedTs = null;
-        try {
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                cachedData = JSON.parse(cached);
-            }
-            const tsRaw = localStorage.getItem(timestampKey);
-            if (tsRaw) {
-                const n = Number(tsRaw);
-                if (Number.isFinite(n)) cachedTs = n;
-            }
-        } catch (err) { }
-
-        if (cachedData && cachedTs !== null && Date.now() - cachedTs < SHEET_CACHE_TTL_MS) {
-            this.recordConnectionSample(null, true, false);
-            this.updateConnectionStatus();
-            return { data: cachedData, fromCache: true };
-        }
-
-        try {
-            let actualSheetName = sheetName;
-            if (sheetName === 'videos') actualSheetName = 'Video Projects';
-            if (sheetName === 'games') actualSheetName = 'Game Projects';
-            if (sheetName === 'School') actualSheetName = 'Schools';
-
-            const url = `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(actualSheetName)}&_=${Date.now()}`;
-            const fetchStartedAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            const response = await fetch(url, {
-                cache: 'no-cache',
-                headers: {
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache'
-                }
-            });
-            if (!response.ok) throw new Error(`Could not fetch ${sheetName} sheet`);
-            const text = await response.text();
-            const data = this.parseGVizResponse(text, sheetName);
-            const fetchEndedAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-            this.recordConnectionSample(fetchEndedAt - fetchStartedAt, false, false);
-            this.updateConnectionStatus();
-
-            try {
-                localStorage.setItem(cacheKey, JSON.stringify(data));
-                localStorage.setItem(timestampKey, String(Date.now()));
-            } catch (err) { }
-
-            return { data, fromCache: false };
-        } catch (err) {
-            if (cachedData) {
-                console.warn(`Using cached data for ${sheetName} due to fetch error:`, err);
-                this.recordConnectionSample(null, true, true);
-                this.updateConnectionStatus();
-                return { data: cachedData, fromCache: true };
-            }
-            this.recordConnectionSample(null, false, true);
-            this.updateConnectionStatus();
-            throw err;
-        }
+        const key = {
+            videos: 'videos',
+            games: 'games',
+            skills: 'skills',
+            Activities: 'Activities',
+            Achievements: 'Achievements',
+            School: 'School',
+            Schools: 'School',
+            'Video Projects': 'videos',
+            'Game Projects': 'games'
+        }[sheetName] || sheetName;
+        const value = this.data[key];
+        return {
+            data: Array.isArray(value) ? [...value] : [],
+            fromCache: true
+        };
     }
 
     async loadAllData() {
-        const sheets = ['videos', 'games', 'skills', 'Achievements', 'School', 'Courses', 'Course Projects'];
+        const sheets = ['videos', 'games', 'skills', 'Achievements', 'School', 'Activities'];
         const data = {};
-        let allCached = true;
-        try {
-            for (const sheet of sheets) {
-                const result = await this.loadSheet(sheet);
-                data[sheet] = result.data;
-                if (!result.fromCache) allCached = false;
-            }
-            return { data, allCached };
-        } catch (err) {
-            throw err;
+        for (const sheet of sheets) {
+            const result = await this.loadSheet(sheet);
+            data[sheet] = result.data;
         }
+        return { data, allCached: true };
     }
 
-    parseGVizResponse(text, sheetName = '') {
-        const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-        if (!match) return [];
-        const obj = JSON.parse(match[1]);
-        const table = obj.table;
-        const headerMap = {
-            'Name': 'name',
-            'Type': 'type',
-            'Location': 'location',
-            'Started': 'started',
-            'Status': 'status',
-            'GPA': 'gpa',
-            'Link': 'link',
-            'Badge': 'badge',
-            'Date': 'date',
-            'Info': 'info',
-            'Completion Year': 'completionYear',
-            'Credits Earned': 'creditsEarned',
-            'Course ID': 'courseid',
-            'ID': 'id',
-            'Languages Used': 'languagesUsed',
-            'Tools Used': 'tools',
-            'Abbreviation': 'schoolAbbreviation',
-            'YouTube Link': 'youtube',
-            'Gallery': 'gallery',
-            'Awards': 'awards',
-            'Level': 'level',
-            'Last Used': 'lastUsed',
-            'Icon': 'icon',
-            'Certified Status': 'certified',
-            'Certification Name': 'certName',
-            'Certification Details': 'certName',
-        };
-        const normalizeHeader = (label) => {
-            const raw = (label || '').toString().trim();
-            if (!raw) return '';
-            const mapped = headerMap[raw];
-            if (mapped) return mapped;
-            return raw.toLowerCase().replace(/\s+/g, '');
-        };
-
-        const rawColLabels = (table.cols || []).map(c => (c && c.label ? String(c.label).trim() : ''));
-        const allLabelsEmpty = rawColLabels.length > 0 && rawColLabels.every(label => !label);
-
-        let cols = rawColLabels.map(normalizeHeader);
-        let rows = table.rows || [];
-
-        if (allLabelsEmpty && rows.length > 0) {
-            const inferredHeaders = (rows[0].c || []).map(cell => {
-                if (!cell) return '';
-                if (cell.v !== null && cell.v !== undefined) return String(cell.v).trim();
-                if (cell.f !== null && cell.f !== undefined) return String(cell.f).trim();
-                return '';
-            });
-            cols = inferredHeaders.map(normalizeHeader);
-            rows = rows.slice(1);
-        }
-
-        return rows.map(row => {
-            const item = {};
-            row.c.forEach((cell, i) => {
-                const key = cols[i];
-                if (!key) return;
-                let val = cell ? cell.v : null;
-                if (key === 'gallery' && val) {
-                    const separator = val.includes(',') ? ',' : ' ';
-                    val = val.split(separator).map(s => {
-                        const trimmed = s.trim();
-                        if (!trimmed) return null;
-
-                        if (trimmed.startsWith('http')) return trimmed;
-
-                        let processedPath = this.normalizePath(trimmed, sheetName);
-
-                        if (!processedPath.startsWith('http') && !processedPath.startsWith('../') && !processedPath.startsWith('Images/')) {
-                            if (sheetName === 'games') {
-                                processedPath = `Images/games/${processedPath}`;
-                            } else if (sheetName === 'videos') {
-                                processedPath = `Images/videos/${processedPath}`;
-                            }
-                        }
-
-                        return processedPath;
-                    }).filter(s => s);
-                } else if (key === 'date' || key === 'lastUsed' || key === 'started' || key === 'startdate' || key === 'enddate' || key === 'ended') {
-                    val = (cell && cell.f) ? cell.f : val;
-                    if (typeof val === 'string') {
-                        const gvizDateMatch = val.match(/^Date\((\d{4}),(\d{1,2}),(\d{1,2})\)$/);
-                        if (gvizDateMatch) {
-                            const year = Number.parseInt(gvizDateMatch[1], 10);
-                            const monthIndex = Number.parseInt(gvizDateMatch[2], 10);
-                            const day = Number.parseInt(gvizDateMatch[3], 10);
-                            const dateObj = new Date(year, monthIndex, day);
-                            if (!Number.isNaN(dateObj.getTime())) {
-                                val = dateObj.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                            }
-                        }
-                    }
-                } else if (key === 'certified' && cell) {
-                    val = cell.v === true || String(cell.f).toUpperCase() === 'TRUE';
-                } else if (key === 'icon' && val && typeof val === 'string') {
-                    val = this.convertGoogleDriveUrl(val);
-                } else if (key === 'awards' && val && typeof val === 'string') {
-                    val = this.parseAwards(val);
-                }
-                item[key] = val;
-            });
-
-            return item;
-        });
-    }
 }

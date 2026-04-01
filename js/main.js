@@ -1,13 +1,34 @@
+window.handlePortraitImageLoad = async (img) => {
+    const media = img && img.closest ? img.closest('.portrait-media') : null;
+    if (!media || !img) return;
+
+    try {
+        if (typeof img.decode === 'function') {
+            await img.decode();
+        }
+    } catch (_) {
+    }
+
+    if (img.complete) {
+        media.classList.add('is-loaded');
+    }
+};
+
+window.handlePortraitImageError = (img) => {
+    const media = img && img.closest ? img.closest('.portrait-media') : null;
+    if (!media) return;
+    media.classList.add('is-loaded');
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     let initialRouteHydrated = false;
     let portfolioGridResizeObserver = null;
     const routes = {
-        '/': { fragment: 'html/pages/bio.html', title: 'BIO' },
-        '/bio': { fragment: 'html/pages/bio.html', title: 'BIO' },
+        '/': { fragment: 'html/pages/bio.html', title: 'HOME' },
+        '/bio': { fragment: 'html/pages/bio.html', title: 'HOME' },
         '/activities': { fragment: 'html/pages/activities.html', title: 'ACTIVITIES' },
         '/achievements': { fragment: 'html/pages/achievements.html', title: 'ACHIEVEMENTS' },
-        '/technical': { fragment: 'html/pages/technical.html', title: 'TECHNICAL' },
-        '/courses': { fragment: 'html/pages/courses.html', title: 'COURSES' },
+        '/skills': { fragment: 'html/pages/skills.html', title: 'SKILLS' },
         '/videos': { fragment: 'html/pages/videos.html', title: 'VIDEOS' },
         '/games': { fragment: 'html/pages/games.html', title: 'GAMES' }
     };
@@ -134,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         coursesLanguageIconsPreloadPromise: null
     };
 
-    const dataService = new DataService('12V7XnylQtfLmT1ux5Va-DPhKc201m3fht9JstupnHdk');
+    const dataService = new DataService();
 
     window.dataService = dataService;
 
@@ -154,8 +175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const lower = pathname.toLowerCase();
         if (lower.endsWith('/html/videos.html') || lower.endsWith('/videos.html')) return '/videos';
         if (lower.endsWith('/html/games.html') || lower.endsWith('/games.html')) return '/games';
-        if (lower.endsWith('/html/technical.html') || lower.endsWith('/technical.html')) return '/technical';
-        if (lower.endsWith('/html/courses.html') || lower.endsWith('/courses.html')) return '/courses';
+        if (lower.endsWith('/html/skills.html') || lower.endsWith('/skills.html')) return '/skills';
         if (lower.endsWith('/html/activities.html') || lower.endsWith('/activities.html')) return '/activities';
         if (lower.endsWith('/html/achievements.html') || lower.endsWith('/achievements.html')) return '/achievements';
         if (lower.endsWith('/index.html')) return '/';
@@ -359,6 +379,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    const setupExternalLinkTriggers = () => {
+        document.querySelectorAll('.external-link-trigger').forEach(el => {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = el.getAttribute('data-url') || el.getAttribute('href');
+                if (url && typeof window.openExternalLinkWithPrompt === 'function') {
+                    window.openExternalLinkWithPrompt(url, el.textContent || 'External Link');
+                }
+            });
+        });
+    };
+
     const getFragmentHtml = async (path) => {
         if (fragmentCache.has(path)) return fragmentCache.get(path);
         const response = await fetch(path);
@@ -394,7 +426,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const updateNavActive = (route) => {
         document.querySelectorAll('.nav-links a').forEach(link => {
-            const linkRoute = link.getAttribute('data-route') || '/';
+            const linkRoute = link.getAttribute('data-route');
+            if (!linkRoute) {
+                link.classList.remove('active');
+                return;
+            }
             if (linkRoute === route) link.classList.add('active');
             else link.classList.remove('active');
         });
@@ -1385,7 +1421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>`;
 
             return `
-    <div class="achievement-card" style="background: #000000; border: 1px solid #1f2428; margin-top: ${marginTop};">
+    <div class="achievement-card" style="margin-top: ${marginTop};">
         <div class="achievement-info">
             <span class="software-tag">${tag}</span>
             <h3>${schoolName}</h3>
@@ -1412,6 +1448,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     historyUrl: buildUrl('/', '')
                 });
             });
+        });
+    };
+
+    const setupPortraitMediaLoadState = () => {
+        document.querySelectorAll('.portrait-media').forEach((media) => {
+            const img = media.querySelector('.portrait-image');
+            if (!img) return;
+            const markLoaded = () => media.classList.add('is-loaded');
+            img.addEventListener('load', markLoaded, { once: true });
+            img.addEventListener('error', markLoaded, { once: true });
+            if (img.complete && img.naturalWidth > 0) markLoaded();
         });
     };
 
@@ -1490,7 +1537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const safeDescription = escapeHtml(description || 'Description coming soon.').replace(/\n/g, '<br>');
 
             return `
-                <div class="achievement-card activity-card" data-activity-name="${escapeHtml(name)}" style="background: #000000; border: 1px solid #1f2428; margin-top: ${marginTop};">
+                <div class="achievement-card activity-card" data-activity-name="${escapeHtml(name)}" style="margin-top: ${marginTop};">
                     <div class="achievement-info">
                         <span class="software-tag">${escapeHtml(type.toUpperCase())}</span>
                         <h3>${escapeHtml(name)}</h3>
@@ -1676,9 +1723,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getSkillsRowsForColumnFilter = () => {
         const skills = Array.isArray(state.allData?.skills) ? state.allData.skills : [];
-        if (state.isAchievementsPage) {
-            return skills.filter(skill => skill.certified === true || String(skill.certified || '').toLowerCase() === 'true');
-        }
         return skills;
     };
 
@@ -2581,18 +2625,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 label: 'Category',
                 filterable: true,
                 values: certifiedSkills.map(skill => toText(skill.badge))
-            },
-            {
-                key: 'level',
-                label: 'Proficiency',
-                filterable: true,
-                values: certifiedSkills.map(skill => toText(skill.level))
-            },
-            {
-                key: 'lastUsed',
-                label: 'Last Used',
-                filterable: false,
-                values: []
             }
         ];
     };
@@ -2846,17 +2878,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const text = document.createElement('span');
             text.innerText = lang.toUpperCase();
             tag.appendChild(text);
-
-            if (skillMatch) {
-                const isCertified = skillMatch.certified === true || String(skillMatch.certified || '').toLowerCase() === 'true';
-                if (isCertified) {
-                    const cert = document.createElement('span');
-                    cert.className = 'grid-certified-badge';
-                    cert.title = skillMatch.certName || skillMatch.name || 'Certified';
-                    cert.innerText = 'CERTIFIED';
-                    tag.appendChild(cert);
-                }
-            }
 
             container.appendChild(tag);
         });
@@ -3977,7 +3998,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!state.allData.games) sheetsNeeded.push('games');
             if (!state.allData.skills) sheetsNeeded.push('skills');
         }
-        if (route === '/technical') {
+        if (route === '/skills') {
             if (!state.allData.skills) sheetsNeeded.push('skills');
             if (!state.allData['Course Projects']) sheetsNeeded.push('Course Projects');
         }
@@ -4052,6 +4073,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (state.currentRoute === '/' || state.currentRoute === '/bio') {
                 renderBioEducation();
+                setupPortraitMediaLoadState();
                 renderRecentWork();
             }
 
@@ -4127,8 +4149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (state.skillsList) {
                 const skillData = data.skills || [];
-                const isAchievements = state.currentRoute === '/achievements';
-                const dynamicCount = isAchievements ? skillData.filter(s => s.certified === true).length : skillData.length;
+                const dynamicCount = skillData.length;
                 setStoredCount(state.skeletonKey, dynamicCount);
 
                 if (!isCached && (!state.didPrimeSkeletons || state.primedSkeletonTarget !== 'skills' || state.primedSkeletonCount !== dynamicCount)) {
@@ -4152,7 +4173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
 
-            if (state.currentRoute === '/technical' && data['Course Projects']) {
+            if (state.currentRoute === '/skills' && data['Course Projects']) {
                 preloadProgrammingLanguageIconsForCourses([], data['Course Projects']).catch(() => { });
             }
         })
@@ -4172,7 +4193,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (state.portfolioFilterGroup) state.portfolioFilterGroup.style.display = isGamesOrVideosPage ? 'flex' : 'none';
         if (state.typeSelectContainer && state.typeSelectContainer.parentElement) state.typeSelectContainer.parentElement.style.display = isGamesOrVideosPage ? 'none' : 'flex';
         if (state.toolSelectContainer && state.toolSelectContainer.parentElement) state.toolSelectContainer.parentElement.style.display = isGamesOrVideosPage ? 'none' : 'flex';
-        if (state.isSkillsPage) state.selectedSort = 'lastUsed';
+        if (state.isSkillsPage) state.selectedSort = 'name';
         else if (state.isPortfolioPage) state.selectedSort = 'date';
 
         state.modalManager = new ModalManager(state);
@@ -4206,10 +4227,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.syncCourseSortIndicators = () => syncTableSortButtons('courses', state.selectedCourseSort, state.selectedCourseOrder);
 
         if (state.isSkillsPage || state.isPortfolioPage) {
-            state.controlsManager.initControlSkeletons();
             state.controlsManager.renderStaticControls();
         }
-        primeSkeletons();
         bindModalButtons();
 
         if (!document.body.dataset.boundColumnHeaderFilterClick) {
@@ -4298,7 +4317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         updateNavActive(route);
-        document.title = `${routeInfo.title} - Benjamin Reynolds`;
+        document.title = `${routeInfo.title} - Devious Duo Productions`;
 
         const token = ++state.routeToken;
         try {
@@ -4369,12 +4388,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const tableSkeleton = (rows = 3, isSkills = false) => {
             const headerCols = isSkills
-                ? ['Name', 'Category', 'Proficiency', 'Last Used']
+                ? ['Name', 'Category']
                 : ['ID', 'Name', 'School', 'Type', 'Status', 'Credits', 'Year', 'Grade'];
 
             const rowCells = () => {
                 if (isSkills) {
-                    const widths = [90, 70, 60, 80];
+                    const widths = [110, 90];
                     return widths.map(width => `<td><div class="skeleton-element" style="width: ${width}px; height: 14px; border-radius: 999px;"></div></td>`).join('');
                 }
 
@@ -4417,17 +4436,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${projectSkeletonCards(6)}
                 `;
                 return;
-            case '/courses':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(220, 460)}
-                    ${controlsSkeleton()}
-                    <div class="courses-dashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:12px;">
-                        <div class="skeleton-element" style="height: 48px; border-radius: 8px;"></div>
-                        <div class="skeleton-element" style="height: 48px; border-radius: 8px;"></div>
-                        <div class="skeleton-element" style="height: 48px; border-radius: 8px;"></div>
-                    </div>
-                `;
-                return;
             case '/bio':
                 root.innerHTML = `
                     ${pageIntroSkeleton(240, 420)}
@@ -4453,7 +4461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                 `;
                 return;
-            case '/technical':
+            case '/skills':
                 root.innerHTML = `
                     ${pageIntroSkeleton(220, 420)}
                     ${controlsSkeleton()}
@@ -4500,9 +4508,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateNavLinks();
 
+    setupExternalLinkTriggers();
+
     const setupMobileNav = () => {
         const toggleBtn = document.getElementById('mobile-menu-toggle');
         const navLinks = document.querySelector('.nav-links');
+        const navContainer = document.querySelector('.nav-container');
         const contactLink = document.getElementById('contact-link');
 
         if (toggleBtn && navLinks) {
@@ -4520,13 +4531,28 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.documentElement.classList.add('scroll-lock');
             };
 
+            const shouldForceMobileNav = () => {
+                if (window.matchMedia('(max-width: 900px)').matches) return true;
+                const navItems = Array.from(navLinks.querySelectorAll('a, button')).filter(item => item.offsetParent !== null);
+                if (navItems.length < 2) return false;
+                const firstTop = navItems[0].offsetTop;
+                return navItems.some(item => Math.abs(item.offsetTop - firstTop) > 2);
+            };
+
+            const syncNavMode = () => {
+                if (!navContainer) return;
+                const forceMobile = shouldForceMobileNav();
+                navContainer.classList.toggle('nav-force-mobile', forceMobile);
+                if (!forceMobile) closeMenu();
+            };
+
             toggleBtn.addEventListener('click', () => {
                 const willOpen = !navLinks.classList.contains('mobile-menu-open');
                 if (willOpen) openMenu();
                 else closeMenu();
             });
 
-            navLinks.querySelectorAll('a').forEach(link => {
+            navLinks.querySelectorAll('a, button').forEach(link => {
                 link.addEventListener('click', () => {
                     closeMenu();
                 });
@@ -4545,6 +4571,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!navLinks.classList.contains('mobile-menu-open')) return;
                 closeMenu();
             });
+
+            const onViewportChange = () => {
+                syncNavMode();
+            };
+
+            window.addEventListener('resize', onViewportChange);
+            window.addEventListener('orientationchange', onViewportChange);
+            requestAnimationFrame(syncNavMode);
         }
 
         if (contactLink) {
@@ -4582,13 +4616,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         initializeGlobalSearch();
     }
 
-    dataService.fetchLastUpdated();
-    dataService.startTimeUpdates();
-    dataService.startConnectionStatusUpdates();
-
     const initialUrl = new URL(window.location.href);
     const initialRoute = resolveRoute(initialUrl.pathname);
-    renderInitialRouteSkeleton(initialRoute);
     loadRoute(initialRoute, initialUrl.search, { push: false });
 
     window.addEventListener('popstate', () => {

@@ -237,20 +237,6 @@ class ModalManager {
         });
     }
 
-    getProficiencyBadgeClass(level) {
-        const normalizedLevel = String(level || '').toLowerCase().trim();
-        if (normalizedLevel === 'beginner') return 'proficiency-beginner';
-        if (normalizedLevel === 'intermediate') return 'proficiency-intermediate';
-        if (normalizedLevel === 'advanced') return 'proficiency-advanced';
-        return 'proficiency-unknown';
-    }
-
-    applyProficiencyBadge(levelElement, levelValue) {
-        if (!levelElement) return;
-        levelElement.classList.remove('proficiency-beginner', 'proficiency-intermediate', 'proficiency-advanced', 'proficiency-unknown');
-        levelElement.classList.add('proficiency-badge', this.getProficiencyBadgeClass(levelValue));
-    }
-
     buildGallerySkeletons(gallery, count) {
         if (!gallery || count <= 0) return;
         gallery.innerHTML = '';
@@ -484,7 +470,9 @@ class ModalManager {
         this.preloadAdjacentSkillIconsFromContext(s.currentToolsContext, s.currentToolIndex);
         const nextToolName = s.currentToolsContext[s.currentToolIndex];
         const skillMatch = s.allData && s.allData.skills
-            ? s.allData.skills.find(sk => sk.name.toLowerCase() === nextToolName.toLowerCase())
+            ? (s.allData.skills.find(sk => String(sk.name || '').toLowerCase() === String(nextToolName || '').toLowerCase())
+                || s.allData.skills.find(sk => String(sk.name || '').toLowerCase().includes(String(nextToolName || '').toLowerCase()))
+                || s.allData.skills.find(sk => String(nextToolName || '').toLowerCase().includes(String(sk.name || '').toLowerCase())))
             : null;
         if (skillMatch) this.openModalForItemWithTransition(skillMatch, direction, 'skill', s.currentToolsContext);
     }
@@ -740,7 +728,12 @@ class ModalManager {
 
         if (useSecondary && toolsContext) {
             s.currentToolsContext = toolsContext;
-            s.currentToolIndex = s.currentToolsContext.findIndex(n => n.toLowerCase() === data.name.toLowerCase());
+            s.currentToolIndex = s.currentToolsContext.findIndex(n => {
+                const toolName = String(n || '').toLowerCase();
+                const skillName = String((data && data.name) || '').toLowerCase();
+                return toolName === skillName || toolName.includes(skillName) || skillName.includes(toolName);
+            });
+            if (s.currentToolIndex < 0) s.currentToolIndex = 0;
         }
 
         if (!useSecondary) {
@@ -828,30 +821,6 @@ class ModalManager {
 
             const sType = document.getElementById(prefix + 'modal-skill-type');
             if (sType) sType.innerText = data.badge || (cardOrData instanceof HTMLElement ? cardOrData.querySelector('.type-badge').innerText : "");
-
-            const sLevel = document.getElementById(prefix + 'modal-skill-level');
-            if (sLevel) {
-                const levelValue = data.level || (cardOrData instanceof HTMLElement ? cardOrData.querySelector('.level').innerText : "-");
-                sLevel.innerText = levelValue;
-                this.applyProficiencyBadge(sLevel, levelValue);
-            }
-
-            const sLast = document.getElementById(prefix + 'modal-skill-last');
-            if (sLast) sLast.innerText = data.lastUsed || (cardOrData instanceof HTMLElement ? cardOrData.querySelector('.last-used').innerText : "-");
-
-            const certContainer = document.getElementById(prefix + 'modal-skill-cert-container');
-            const certName = document.getElementById(prefix + 'modal-skill-cert-name');
-            if (certContainer && certName) {
-                const isCertified = data.certified === true || String(data.certified || '').toLowerCase() === 'true';
-                const fallbackCertName = data.certName || data.name || (cardOrData instanceof HTMLElement ? cardOrData.getAttribute('data-cert-name') : '') || '-';
-                if (isCertified) {
-                    certContainer.style.display = "block";
-                    certName.innerText = fallbackCertName;
-                } else {
-                    certContainer.style.display = "none";
-                    certName.innerText = "-";
-                }
-            }
 
             const courseProjectCardCount = this.populateSkillModalCourseProjectRows(prefix, data);
 
@@ -1004,13 +973,6 @@ class ModalManager {
                         const text = document.createElement('span');
                         text.innerText = tool.toUpperCase();
                         tag.appendChild(text);
-                        if (skillMatch && skillMatch.certified) {
-                            const cert = document.createElement('span');
-                            cert.className = 'grid-certified-badge';
-                            cert.title = skillMatch.certName || skillMatch.name || 'Certified';
-                            cert.innerText = 'CERTIFIED';
-                            tag.appendChild(cert);
-                        }
                         if (skillMatch) {
                             tag.classList.add('clickable-tool');
                             tag.addEventListener('click', (e) => {
@@ -1039,11 +1001,13 @@ class ModalManager {
 
             const awardsContainer = document.getElementById("film-festival-awards");
             const awardsList = document.getElementById("awards-list");
+            const projectInfo = document.getElementById("project-info");
             const isGamesPage = s.currentRoute === '/games';
             if (awardsContainer && awardsList && s.filmFestivalAwards && !isGamesPage) {
                 const awards = s.filmFestivalAwards[data.name];
                 if (awards && awards.length > 0) {
                     awardsContainer.style.display = 'block';
+                    if (projectInfo) projectInfo.classList.remove('no-awards');
                     awardsList.innerHTML = '';
                     awards.forEach(award => {
                         const locationParts = (award.location || '').split('|').map(part => part.trim());
@@ -1090,9 +1054,11 @@ class ModalManager {
                     });
                 } else {
                     awardsContainer.style.display = 'none';
+                    if (projectInfo) projectInfo.classList.add('no-awards');
                 }
             } else if (awardsContainer) {
                 awardsContainer.style.display = 'none';
+                if (projectInfo) projectInfo.classList.add('no-awards');
             }
 
             const hasVideo = youtubeID && youtubeID.trim() !== "" && youtubeID !== "YOUTUBE_ID_HERE";
@@ -1448,6 +1414,3 @@ class ModalManager {
         setTimeout(checkCursor, 100);
     }
 }
-
-
-// modal-animation-fix-end-marker

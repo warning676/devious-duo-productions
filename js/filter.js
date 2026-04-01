@@ -170,7 +170,7 @@ class FilterManager {
             s.portfolioGrid.style.minHeight = '';
         }
         if (s.noResults) {
-            const showNoMatch = visibleCount === 0 && (!hasSkeleton || totalCards > 0);
+            const showNoMatch = totalCards > 0 && visibleCount === 0;
             s.noResults.style.display = showNoMatch ? "block" : "none";
         }
         this.updateFilterResultsLine('portfolio-filter-results-count', visibleCount, totalCards, 'projects', 'project');
@@ -217,15 +217,11 @@ class FilterManager {
             const matchesType = s.selectedCategories.includes('all') || s.selectedCategories.includes(item.dataset.type);
             const selectedByColumn = s.selectedSkillColumnValues || {};
             const itemType = (item.dataset.type || '').trim();
-            const itemLevel = (item.querySelector('.level')?.textContent || '').trim();
             const normalizedType = itemType ? itemType.toLowerCase() : '__none__';
-            const normalizedLevel = itemLevel ? itemLevel.toLowerCase() : '__none__';
             const normalizedTypeSelections = (selectedByColumn.type || []).map(value => String(value).toLowerCase());
-            const normalizedLevelSelections = (selectedByColumn.level || []).map(value => String(value).toLowerCase());
             const matchesColumnType = !('type' in selectedByColumn) || normalizedTypeSelections.includes('all') || normalizedTypeSelections.includes(normalizedType);
-            const matchesColumnLevel = !('level' in selectedByColumn) || normalizedLevelSelections.includes('all') || normalizedLevelSelections.includes(normalizedLevel);
 
-            if (matchesQuery && matchesType && matchesColumnType && matchesColumnLevel) {
+            if (matchesQuery && matchesType && matchesColumnType) {
                 item.style.display = '';
                 visibleCount++;
             } else {
@@ -247,13 +243,7 @@ class FilterManager {
         if (tableBody) {
             const existingRow = tableBody.querySelector('.skills-no-results-row');
             if (visibleCount === 0) {
-                let emptyMsg = 'No skills match the current filters.';
-                if (s.isAchievementsPage) {
-                    const allSkills = Array.isArray(s.allData?.skills) ? s.allData.skills : [];
-                    const certifiedCount = allSkills.filter(skill => skill.certified === true || String(skill.certified || '').toLowerCase() === 'true').length;
-                    emptyMsg = certifiedCount === 0 ? 'No certifications added yet.' : 'No skills match the current filters.';
-                }
-                if (!existingRow) tableBody.insertAdjacentHTML('beforeend', `<tr class="skills-no-results-row"><td colspan="4" class="courses-loading-row">${emptyMsg}</td></tr>`);
+                if (!existingRow) tableBody.insertAdjacentHTML('beforeend', '<tr class="skills-no-results-row"><td colspan="2" class="skills-loading-row">No skills match the current filters.</td></tr>');
             } else {
                 if (existingRow) existingRow.remove();
             }
@@ -303,10 +293,8 @@ class FilterManager {
                 sortVal = nameVal;
             } else if (sortBy === 'type') {
                 sortVal = (item.dataset.type || '').toLowerCase().trim();
-            } else if (sortBy === 'proficiency') {
-                sortVal = Utils.getProficiencyValue(item.querySelector('.level').textContent);
             } else {
-                sortVal = Utils.parseMonthYearToTime(item.querySelector('.last-used')?.textContent);
+                sortVal = nameVal;
             }
             return { item, nameVal, sortVal };
         });

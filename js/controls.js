@@ -129,7 +129,7 @@ class ControlsManager {
         });
 
         const sortOptions = s.isSkillsPage
-            ? [{ id: 'name', label: 'Name' }, { id: 'proficiency', label: 'Proficiency' }, { id: 'lastUsed', label: 'Last Used' }]
+            ? [{ id: 'name', label: 'Name' }, { id: 'type', label: 'Category' }]
             : [{ id: 'date', label: 'Date' }, { id: 'name', label: 'Name' }];
 
         this.renderSingleSelect(s.sortSelectContainer, sortOptions, s.selectedSort, (val) => {
