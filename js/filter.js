@@ -1,0 +1,350 @@
+class FilterManager {
+    constructor(state) {
+        this.s = state;
+    }
+
+    normalizeText(s) {
+        if (!s) return '';
+        return String(s).toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    updateFilterResultsLine(elementId, visible, total, pluralNoun, singularNoun) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const t = Number.isFinite(total) ? Math.max(0, Math.floor(total)) : 0;
+        const v = Number.isFinite(visible) ? Math.max(0, Math.floor(visible)) : 0;
+        if (t === 0) {
+            el.textContent = '';
+            return;
+        }
+        const noun = t === 1 ? singularNoun : pluralNoun;
+        if (v === t) {
+            el.textContent = `${t} ${noun}`;
+        } else {
+            el.textContent = `${v} of ${t} ${noun} (${t - v} hidden)`;
+        }
+    }
+
+    levenshtein(a, b) {
+        if (a === b) return 0;
+        const al = a.length, bl = b.length;
+        if (al === 0) return bl;
+        if (bl === 0) return al;
+        const matrix = Array.from({ length: al + 1 }, () => new Array(bl + 1).fill(0));
+        for (let i = 0; i <= al; i++) matrix[i][0] = i;
+        for (let j = 0; j <= bl; j++) matrix[0][j] = j;
+        for (let i = 1; i <= al; i++) {
+            for (let j = 1; j <= bl; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j - 1] + cost
+                );
+            }
+        }
+        return matrix[al][bl];
+    }
+
+    expandQueryTerms(query) {
+        if (!query) return [''];
+        const q = this.normalizeText(query);
+        const terms = new Set();
+        if (q) terms.add(q);
+        q.split(/\s+/).forEach(t => { if (t) terms.add(t); });
+        return Array.from(terms);
+    }
+
+    fuzzyTermMatch(contentTokens, term) {
+        if (!term) return true;
+        const t = this.normalizeText(term);
+        if (!t) return true;
+        const joined = contentTokens.join(' ');
+        if (joined.includes(t)) return true;
+        if (t.length <= 2) {
+            for (const ct of contentTokens) if (ct === t) return true;
+            const abbrs = new Set();
+            const len = contentTokens.length;
+            for (let w = 1; w <= Math.min(3, len); w++) {
+                for (let start = 0; start + w <= len; start++) {
+                    const slice = contentTokens.slice(start, start + w);
+                    const ab = slice.map(s => s.charAt(0)).join('');
+                    if (ab) abbrs.add(ab);
+                }
+            }
+            for (const a of abbrs) if (a === t) return true;
+            return false;
+        }
+
+        if (t.length <= 3) {
+            const abbrs = new Set();
+            const len = contentTokens.length;
+            for (let w = 1; w <= Math.min(4, len); w++) {
+                for (let start = 0; start + w <= len; start++) {
+                    const slice = contentTokens.slice(start, start + w);
+                    const ab = slice.map(s => s.charAt(0)).join('');
+                    if (ab) abbrs.add(ab);
+                }
+            }
+            for (const a of abbrs) {
+                if (a === t) return true;
+                if (this.levenshtein(a, t) <= 1) return true;
+            }
+        }
+
+        const termTokens = t.split(/\s+/);
+        for (const tt of termTokens) {
+            let matched = false;
+            for (const ct of contentTokens) {
+                if (!ct) continue;
+                if (ct.includes(tt)) { matched = true; break; }
+                if (tt.length >= 3 && Math.abs(ct.length - tt.length) <= 1 && this.levenshtein(ct, tt) <= 1) { matched = true; break; }
+            }
+            if (!matched) return false;
+        }
+        return true;
+    }
+
+    filterCards() {
+        const s = this.s;
+        if (!s.portfolioGrid) return;
+        const hasSkeleton = !!s.portfolioGrid.querySelector('.skeleton-item');
+        if (!hasSkeleton && typeof s.lockPortfolioGridHeight === 'function') s.lockPortfolioGridHeight();
+        const query = this.normalizeText(s.searchQuery);
+        const queryTokens = query.split(/\s+/).filter(t => t);
+        let visibleCount = 0;
+        const dataCards = Array.from(s.portfolioGrid.querySelectorAll('.portfolio-card')).filter(c => !c.classList.contains('skeleton-item'));
+        const totalCards = dataCards.length;
+        if (hasSkeleton && totalCards === 0) {
+            const skeletonCount = s.portfolioGrid.querySelectorAll('.portfolio-card.skeleton-item').length;
+            if (skeletonCount > 0) {
+                this.updateFilterResultsLine('portfolio-filter-results-count', skeletonCount, skeletonCount, 'projects', 'project');
+                const statusElSk = document.getElementById('page-search-status');
+                if (statusElSk) {
+                    const rawQ = s.searchQuery ? s.searchQuery.trim() : '';
+                    if (rawQ) {
+                        const safe = rawQ.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        statusElSk.classList.add('visible');
+                        statusElSk.innerHTML = `Showing results for "<span style="color:#58a6ff;">${safe}</span>"`;
+                    } else {
+                        statusElSk.classList.remove('visible');
+                        statusElSk.innerHTML = '';
+                    }
+                }
+                if (s.noResults) s.noResults.style.display = 'none';
+                return;
+            }
+        }
+        dataCards.forEach(card => {
+            const cardType = card.getAttribute('data-type') || '';
+            const cardTools = (card.getAttribute('data-tools') || '').toLowerCase();
+            const toolsList = cardTools.split(',').map(t => t.trim());
+            const cardAwards = (card.getAttribute('data-awards') || '').toLowerCase();
+            const normalizedCardType = cardType || '__NONE__';
+            const normalizedSelectedTools = s.selectedTools.map(st => st.toLowerCase());
+            const hasNoTools = toolsList.filter(Boolean).length === 0;
+
+            const matchesType = s.selectedCategories.includes('all') || s.selectedCategories.includes(cardType) || s.selectedCategories.includes(normalizedCardType);
+            const matchesTool = s.selectedTools.includes('all') || toolsList.some(t => normalizedSelectedTools.includes(t)) || (hasNoTools && normalizedSelectedTools.includes('__none__'));
+
+            const contentRaw = (card.textContent || '') + ' ' + cardTools + ' ' + (card.getAttribute('data-info') || '') + ' ' + cardAwards;
+            const content = this.normalizeText(contentRaw);
+            const contentTokens = content.split(/\s+/);
+            let matchesQuery = true;
+            if (queryTokens.length === 1) {
+                matchesQuery = this.fuzzyTermMatch(contentTokens, queryTokens[0]);
+            } else if (queryTokens.length > 1) {
+                const required = queryTokens.filter(t => t.length >= 3);
+                const termsToCheck = required.length > 0 ? required : queryTokens;
+                matchesQuery = termsToCheck.every(term => this.fuzzyTermMatch(contentTokens, term));
+            }
+
+            if (matchesType && matchesTool && matchesQuery) {
+                card.style.display = "block";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+        if (visibleCount === 0 && totalCards > 0) {
+            s.portfolioGrid.style.minHeight = '';
+        }
+        if (s.noResults) {
+            const showNoMatch = visibleCount === 0 && (!hasSkeleton || totalCards > 0);
+            s.noResults.style.display = showNoMatch ? "block" : "none";
+        }
+        this.updateFilterResultsLine('portfolio-filter-results-count', visibleCount, totalCards, 'projects', 'project');
+        const statusEl = document.getElementById('page-search-status');
+        if (statusEl) {
+            const rawQuery = s.searchQuery ? s.searchQuery.trim() : '';
+            if (rawQuery && hasSkeleton) {
+                const safe = rawQuery.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusEl.classList.add('visible');
+                statusEl.innerHTML = `<div class="page-search-status-inner"><span class="page-search-spinner"></span><span>Loading results for "<span style="color:#58a6ff;">${safe}</span>"\u2026</span></div>`;
+            } else if (rawQuery) {
+                const safe = rawQuery.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusEl.classList.add('visible');
+                statusEl.innerHTML = `Showing results for "<span style="color:#58a6ff;">${safe}</span>"`;
+            } else {
+                statusEl.classList.remove('visible');
+                statusEl.innerHTML = '';
+            }
+        }
+    }
+
+    filterSkills() {
+        const s = this.s;
+        if (!s.skillsList) return;
+        if (typeof s.lockSkillsTableHeight === 'function') s.lockSkillsTableHeight();
+        const query = this.normalizeText(s.searchQuery);
+        const queryTokens = query.split(/\s+/).filter(t => t);
+        let visibleCount = 0;
+        const skillItems = s.skillsList.querySelectorAll('.skill-item');
+        const totalSkills = skillItems.length;
+        skillItems.forEach(item => {
+            const info = item.getAttribute('data-info') || '';
+            const textRaw = (item.textContent || '') + ' ' + info;
+            const text = this.normalizeText(textRaw);
+            const textTokens = text.split(/\s+/).filter(t => t);
+            let matchesQuery = true;
+            if (queryTokens.length === 1) {
+                matchesQuery = this.fuzzyTermMatch(textTokens, queryTokens[0]);
+            } else if (queryTokens.length > 1) {
+                const required = queryTokens.filter(t => t.length >= 3);
+                const termsToCheck = required.length > 0 ? required : queryTokens;
+                matchesQuery = termsToCheck.every(term => this.fuzzyTermMatch(textTokens, term));
+            }
+            const matchesType = s.selectedCategories.includes('all') || s.selectedCategories.includes(item.dataset.type);
+            const selectedByColumn = s.selectedSkillColumnValues || {};
+            const itemType = (item.dataset.type || '').trim();
+            const itemLevel = (item.querySelector('.level')?.textContent || '').trim();
+            const normalizedType = itemType ? itemType.toLowerCase() : '__none__';
+            const normalizedLevel = itemLevel ? itemLevel.toLowerCase() : '__none__';
+            const normalizedTypeSelections = (selectedByColumn.type || []).map(value => String(value).toLowerCase());
+            const normalizedLevelSelections = (selectedByColumn.level || []).map(value => String(value).toLowerCase());
+            const matchesColumnType = !('type' in selectedByColumn) || normalizedTypeSelections.includes('all') || normalizedTypeSelections.includes(normalizedType);
+            const matchesColumnLevel = !('level' in selectedByColumn) || normalizedLevelSelections.includes('all') || normalizedLevelSelections.includes(normalizedLevel);
+
+            if (matchesQuery && matchesType && matchesColumnType && matchesColumnLevel) {
+                item.style.display = '';
+                visibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        const tableBody = s.skillsList ? s.skillsList.querySelector('.skills-table-body') : null;
+        let visibleIdx = 0;
+        let lastVisibleItem = null;
+        skillItems.forEach(item => {
+            item.classList.remove('last-visible-row');
+            if (item.style.display !== 'none') {
+                lastVisibleItem = item;
+                visibleIdx++;
+            }
+        });
+        if (lastVisibleItem && visibleCount === totalSkills) lastVisibleItem.classList.add('last-visible-row');
+        if (tableBody) {
+            const existingRow = tableBody.querySelector('.skills-no-results-row');
+            if (visibleCount === 0) {
+                let emptyMsg = 'No skills match the current filters.';
+                if (s.isAchievementsPage) {
+                    const allSkills = Array.isArray(s.allData?.skills) ? s.allData.skills : [];
+                    const certifiedCount = allSkills.filter(skill => skill.certified === true || String(skill.certified || '').toLowerCase() === 'true').length;
+                    emptyMsg = certifiedCount === 0 ? 'No certifications added yet.' : 'No skills match the current filters.';
+                }
+                if (!existingRow) tableBody.insertAdjacentHTML('beforeend', `<tr class="skills-no-results-row"><td colspan="4" class="courses-loading-row">${emptyMsg}</td></tr>`);
+            } else {
+                if (existingRow) existingRow.remove();
+            }
+            if (s.noResults) s.noResults.style.display = 'none';
+        } else {
+            if (s.noResults) s.noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        this.updateFilterResultsLine('skills-filter-results-count', visibleCount, totalSkills, 'skills', 'skill');
+        const statusEl = document.getElementById('page-search-status');
+        if (statusEl) {
+            const hasSkeleton = !!s.skillsList.querySelector('.skeleton-item');
+            const rawQuery = s.searchQuery ? s.searchQuery.trim() : '';
+            if (rawQuery && hasSkeleton) {
+                const safe = rawQuery.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusEl.classList.add('visible');
+                statusEl.innerHTML = `<div class="page-search-status-inner"><span class="page-search-spinner"></span><span>Loading results for "<span style="color:#58a6ff;">${safe}</span>"\u2026</span></div>`;
+            } else if (rawQuery) {
+                const safe = rawQuery.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                statusEl.classList.add('visible');
+                statusEl.innerHTML = `Showing results for "<span style="color:#58a6ff;">${safe}</span>"`;
+            } else {
+                statusEl.classList.remove('visible');
+                statusEl.innerHTML = '';
+            }
+        }
+    }
+
+    sortSkills() {
+        const s = this.s;
+        if (!s.skillsList) return;
+        const sortBy = s.selectedSort;
+        const order = s.selectedOrder;
+        const items = Array.from(s.skillsList.querySelectorAll('.skill-item'));
+        if (!sortBy || !order) {
+            items.sort((a, b) => Number.parseInt(a.dataset.originalIndex || '0', 10) - Number.parseInt(b.dataset.originalIndex || '0', 10));
+            const target = s.skillsList.querySelector('.skills-table-body') || s.skillsList;
+            const frag = document.createDocumentFragment();
+            items.forEach(item => frag.appendChild(item));
+            target.appendChild(frag);
+            return;
+        }
+        const precomputed = items.map(item => {
+            const nameVal = item.dataset.name.toLowerCase().trim();
+            let sortVal;
+            if (sortBy === 'name') {
+                sortVal = nameVal;
+            } else if (sortBy === 'type') {
+                sortVal = (item.dataset.type || '').toLowerCase().trim();
+            } else if (sortBy === 'proficiency') {
+                sortVal = Utils.getProficiencyValue(item.querySelector('.level').textContent);
+            } else {
+                sortVal = Utils.parseMonthYearToTime(item.querySelector('.last-used')?.textContent);
+            }
+            return { item, nameVal, sortVal };
+        });
+        precomputed.sort((a, b) => {
+            if (a.sortVal === b.sortVal) return a.nameVal.localeCompare(b.nameVal);
+            return order === 'desc' ? (a.sortVal > b.sortVal ? -1 : 1) : (a.sortVal < b.sortVal ? -1 : 1);
+        });
+        const target = s.skillsList.querySelector('.skills-table-body') || s.skillsList;
+        const frag = document.createDocumentFragment();
+        precomputed.forEach(entry => frag.appendChild(entry.item));
+        target.appendChild(frag);
+    }
+
+    sortCards() {
+        const s = this.s;
+        if (!s.portfolioGrid) return;
+        const sortBy = s.selectedSort;
+        const order = s.selectedOrder;
+        const cards = Array.from(s.portfolioGrid.querySelectorAll('.portfolio-card'));
+        const precomputed = cards.map(card => {
+            const nameVal = (card.getAttribute('data-name') || '').toLowerCase();
+            let sortVal;
+            if (sortBy === 'name') {
+                sortVal = nameVal;
+            } else {
+                sortVal = new Date(card.getAttribute('data-date').replace(/-/g, '/')).getTime();
+            }
+            return { card, nameVal, sortVal };
+        });
+        precomputed.sort((a, b) => {
+            if (sortBy === 'name') {
+                return order === 'asc' ? a.sortVal.localeCompare(b.sortVal) : b.sortVal.localeCompare(a.sortVal);
+            }
+            if (a.sortVal === b.sortVal) return a.nameVal.localeCompare(b.nameVal);
+            return order === 'asc' ? (a.sortVal - b.sortVal) : (b.sortVal - a.sortVal);
+        });
+        const frag = document.createDocumentFragment();
+        precomputed.forEach(entry => frag.appendChild(entry.card));
+        s.portfolioGrid.appendChild(frag);
+    }
+}

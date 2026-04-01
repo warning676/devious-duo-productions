@@ -1,0 +1,230 @@
+<div id="infoModal" class="modal">
+    <div class="modal-content">
+        <button id="modal-prev" class="modal-nav-btn prev" aria-label="Previous project"></button>
+        <button id="modal-next" class="modal-nav-btn next" aria-label="Next project"></button>
+
+        <div class="modal-header">
+            <div id="project-header" style="display: block;">
+                <h2 id="modal-title">Project Details</h2>
+            </div>
+            <div id="skill-header" style="display: none;">
+                <img id="modal-skill-icon" src="" alt="" style="width: 32px; height: 32px; object-fit: contain;">
+                <h2 id="modal-title-main">Skill Details</h2>
+            </div>
+            <button class="close-button"></button>
+        </div>
+        <div id="modal-split-body" class="modal-body-split">
+            <div class="modal-media-pane">
+                <div id="media-container">
+                    <iframe id="modal-video" src="" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div class="gallery-stack">
+                    <div class="gallery-toggle-row">
+                        <button id="gallery-toggle" class="gallery-toggle" type="button" aria-expanded="true" aria-controls="modal-gallery" aria-label="Hide gallery"></button>
+                    </div>
+                    <div id="modal-gallery" class="screenshot-gallery"></div>
+                </div>
+            </div>
+            <div class="modal-info-pane">
+                <div id="project-info" style="display: block;">
+                    <div class="modal-project-heading">
+                        <p id="modal-date" class="modal-project-meta"></p>
+                        <h3 id="modal-info-title" class="modal-project-title"></h3>
+                        <span id="modal-info-category" class="type-badge modal-project-category"></span>
+                    </div>
+                    <p id="modal-description" class="modal-project-description"></p>
+                    
+                    <div id="film-festival-awards" style="display: none; margin-bottom: 25px;">
+                        <hr style="border: 0; border-top: 1px solid #1f2428; margin-bottom: 15px;">
+                        <h4 class="modal-project-section-label">Awards</h4>
+                        <div id="awards-list" style="display: flex; flex-direction: column; gap: 8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="skill-info" style="display: none;">
+                    <p id="bio-description"
+                        style="margin-bottom: 25px; font-size: 1rem; line-height: 1.6; color: #e1e4e8;"></p>
+                    <hr style="border: 0; border-top: 1px solid #1f2428; margin-bottom: 20px;">
+                    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+                        <div>
+                            <small
+                                style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Last
+                                Used</small>
+                            <strong id="modal-skill-last" style="color: #ffffff;">-</strong>
+                        </div>
+                        <div>
+                            <small
+                                style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Proficiency</small>
+                            <strong id="modal-skill-level" class="proficiency-badge proficiency-unknown">-</strong>
+                        </div>
+                        <div>
+                            <small
+                                style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Category</small>
+                            <strong id="modal-skill-type" style="color: #ffffff;">-</strong>
+                        </div>
+                        <div id="modal-skill-cert-container" style="display: none;">
+                            <small
+                                style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Certification</small>
+                            <div class="cert-badge">
+                                <span class="cert-dot"></span>
+                                <strong id="modal-skill-cert-name">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modal-skill-course-project-cards-wrap" class="courses-modal-featured-lang-wrap modal-skill-course-project-cards-wrap" style="display: none;">
+                        <small id="modal-skill-course-project-cards-label" class="courses-modal-featured-project-lang-label">Course projects</small>
+                        <div id="modal-skill-course-project-cards" class="modal-skill-course-project-cards"></div>
+                    </div>
+                    <div id="modal-skill-course-project-lang-wrap" class="courses-modal-featured-lang-wrap modal-skill-course-project-lang-wrap" style="display: none;">
+                        <small id="modal-skill-course-project-lang-label" class="courses-modal-featured-project-lang-label">Course project languages</small>
+                        <div id="modal-skill-course-project-languages" class="courses-modal-featured-languages"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: auto;">
+                    <small
+                        style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 5px;">Tools
+                        used:</small>
+                    <span id="modal-tools"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="secondaryModal" class="modal" style="z-index: 2000;">
+    <div class="modal-content">
+        <button id="sec-modal-prev" class="sec-modal-nav-btn prev" aria-label="Previous tool"></button>
+        <button id="sec-modal-next" class="sec-modal-nav-btn next" aria-label="Next tool"></button>
+        <div class="modal-header">
+            <div style="display: flex;">
+                <img id="sec-modal-skill-icon" src="" alt=""
+                    style="width: 32px; height: 32px; object-fit: contain;">
+                <h2 id="sec-modal-title-main">Skill Details</h2>
+            </div>
+            <button class="sec-close-button"></button>
+        </div>
+        <div class="modal-body-split">
+            <div class="modal-info-pane" style="padding: 20px; max-width: none; width: 100%;">
+                <p id="sec-bio-description"
+                    style="margin-bottom: 25px; font-size: 1rem; line-height: 1.6; color: #e1e4e8;"></p>
+                <hr style="border: 0; border-top: 1px solid #1f2428; margin-bottom: 20px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+                    <div>
+                        <small
+                            style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Last
+                            Used</small>
+                        <strong id="sec-modal-skill-last" style="color: #ffffff;">-</strong>
+                    </div>
+                    <div>
+                        <small
+                            style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Proficiency</small>
+                        <strong id="sec-modal-skill-level" class="proficiency-badge proficiency-unknown">-</strong>
+                    </div>
+                    <div>
+                        <small
+                            style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Category</small>
+                        <strong id="sec-modal-skill-type" style="color: #ffffff;">-</strong>
+                    </div>
+                    <div id="sec-modal-skill-cert-container" style="display: none;">
+                        <small
+                            style="color: #8b949e; display: block; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px;">Certification</small>
+                        <div class="cert-badge">
+                            <span class="cert-dot"></span>
+                            <strong id="sec-modal-skill-cert-name">-</strong>
+                        </div>
+                    </div>
+                </div>
+                <div id="sec-modal-skill-course-project-cards-wrap" class="courses-modal-featured-lang-wrap modal-skill-course-project-cards-wrap" style="display: none;">
+                    <small id="sec-modal-skill-course-project-cards-label" class="courses-modal-featured-project-lang-label">Course projects</small>
+                    <div id="sec-modal-skill-course-project-cards" class="modal-skill-course-project-cards"></div>
+                </div>
+                <div id="sec-modal-skill-course-project-lang-wrap" class="courses-modal-featured-lang-wrap modal-skill-course-project-lang-wrap" style="display: none;">
+                    <small id="sec-modal-skill-course-project-lang-label" class="courses-modal-featured-project-lang-label">Course project languages</small>
+                    <div id="sec-modal-skill-course-project-languages" class="courses-modal-featured-languages"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="courses-modal" class="modal" aria-hidden="true">
+    <div class="modal-content courses-modal-content">
+        <button id="courses-modal-prev" class="modal-nav-btn prev" aria-label="Previous course"></button>
+        <button id="courses-modal-next" class="modal-nav-btn next" aria-label="Next course"></button>
+        <div class="modal-header">
+            <div>
+                <h2 id="courses-modal-title">Course Details</h2>
+            </div>
+            <button id="courses-modal-close" class="close-button" aria-label="Close course details"></button>
+        </div>
+        <div class="courses-modal-body">
+            <div class="courses-modal-grid">
+                <div>
+                    <small>ID</small>
+                    <strong id="courses-modal-id">-</strong>
+                </div>
+                <div>
+                    <small>School</small>
+                    <strong id="courses-modal-school">-</strong>
+                </div>
+                <div>
+                    <small>Type</small>
+                    <strong id="courses-modal-type">-</strong>
+                </div>
+                <div>
+                    <small>Status</small>
+                    <strong id="courses-modal-status">-</strong>
+                </div>
+                <div>
+                    <small>Grade</small>
+                    <strong id="courses-modal-grade">-</strong>
+                </div>
+                <div>
+                    <small>Credits</small>
+                    <strong id="courses-modal-credits">-</strong>
+                </div>
+                <div>
+                    <small>Year</small>
+                    <strong id="courses-modal-year">-</strong>
+                </div>
+            </div>
+            <small style="display:block;color:#8b949e;font-size:.75rem;text-transform:uppercase;letter-spacing:.4px;margin-top:14px;margin-bottom:6px;">INFO</small>
+            <p id="courses-modal-info" class="courses-modal-info"></p>
+            <div id="courses-modal-featured-section" class="courses-modal-featured-section" aria-hidden="true">
+                <small class="courses-modal-featured-label">Featured Project from this Course</small>
+                <button type="button" id="courses-modal-featured-link" class="inline-action-button courses-modal-featured-link"></button>
+                <p id="courses-modal-featured-desc" class="courses-modal-featured-desc"></p>
+                <div id="courses-modal-featured-lang-wrap" class="courses-modal-featured-lang-wrap">
+                    <small id="courses-modal-featured-project-lang-label" class="courses-modal-featured-project-lang-label">Project Languages</small>
+                    <div id="courses-modal-featured-languages" class="courses-modal-featured-languages" aria-label="Programming languages used in featured project"></div>
+                </div>
+            </div>
+            <small id="courses-modal-programming-languages-label" class="courses-modal-programming-languages-label">Course Languages</small>
+            <div id="courses-modal-programming-languages" class="courses-modal-programming-languages" aria-label="Programming languages used in this course"></div>
+        </div>
+    </div>
+</div>
+
+<div id="external-link-modal" class="modal external-link-modal">
+    <div class="modal-content external-link-modal-content">
+        <div class="external-link-header">
+            <h3 id="external-link-header-title" style="text-transform: uppercase;">Leave Portfolio?</h3>
+            <button id="external-link-cancel" class="close-button" aria-label="Close external link confirmation"></button>
+        </div>
+        <hr class="external-link-divider external-link-divider-top">
+        <p id="external-link-message" class="external-link-message" style="margin-bottom: 20px;">You are about to open an external website in a new tab.</p>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+            <p id="external-link-category" class="external-link-category"></p>
+            <p id="external-link-title" class="external-link-title"></p>
+            <p id="external-link-info" class="external-link-title" style="display: none; white-space: pre-line;"></p>
+            <p id="external-link-url" class="external-link-url"></p>
+        </div>
+        <hr class="external-link-divider external-link-divider-bottom">
+        <div class="external-link-actions">
+            <button id="external-link-stay" class="external-link-btn secondary" type="button">Stay Here</button>
+            <button id="external-link-continue" class="external-link-btn primary" type="button">Open Link</button>
+        </div>
+    </div>
+</div>

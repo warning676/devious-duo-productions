@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+</head>
+
+<body>
+    <script>
+        const fullPath = window.location.pathname + window.location.search + window.location.hash;
+        const candidateBase = window.location.pathname.replace(/\/404\.html$/, '');
+        const appRoot = candidateBase.replace(/\/[^/]*$/, '') || '/';
+        sessionStorage.setItem('spa-redirect', fullPath);
+        const target = (appRoot.endsWith('/') ? appRoot : appRoot + '/') + 'index.html';
+        if (window.location.pathname !== target) {
+            window.location.replace(target);
+        } else {
+            window.location.replace(window.location.href);
+        }
+    </script>
+</body>
+
+</html>
