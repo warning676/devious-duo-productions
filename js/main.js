@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     let initialRouteHydrated = false;
     let portfolioGridResizeObserver = null;
     const routes = {
-        '/': { fragment: 'html/pages/bio.html', title: 'HOME' },
-        '/bio': { fragment: 'html/pages/bio.html', title: 'HOME' },
+        '/': { fragment: 'html/pages/home.html', title: 'HOME' },
+        '/bio': { fragment: 'html/pages/home.html', title: 'HOME' },
         '/activities': { fragment: 'html/pages/activities.html', title: 'ACTIVITIES' },
         '/achievements': { fragment: 'html/pages/achievements.html', title: 'ACHIEVEMENTS' },
         '/skills': { fragment: 'html/pages/skills.html', title: 'SKILLS' },
@@ -60,8 +60,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         typeSelectContainer: null,
         sortSelectContainer: null,
         orderSelectContainer: null,
-        courseSortSelectContainer: null,
-        courseOrderSelectContainer: null,
         searchContainer: null,
         searchInput: null,
         coursesSearchInput: null,
@@ -83,7 +81,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         coursesModalStatus: null,
         coursesModalGrade: null,
         coursesModalCredits: null,
-        coursesModalName: null,
         coursesModalInfo: null,
         coursesModalProgrammingLanguagesLabel: null,
         coursesModalProgrammingLanguagesContainer: null,
@@ -122,7 +119,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         allData: null,
         dataPromise: null,
         filmFestivalAwards: {},
-        pendingFocusSchool: '',
 
         openModalForItem: null,
         filterCards: null,
@@ -144,8 +140,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         isSkillsPage: false,
         isAchievementsPage: false,
         isPortfolioPage: false,
-        isCoursesPage: false,
         routeToken: 0,
+        routeTransitionInFlight: false,
 
         didPrimeSkeletons: false,
         primedSkeletonCount: 0,
@@ -527,8 +523,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.typeSelectContainer = document.getElementById('type-select');
         state.sortSelectContainer = document.getElementById('sort-select');
         state.orderSelectContainer = document.getElementById('order-select');
-        state.courseSortSelectContainer = document.getElementById('course-sort-select');
-        state.courseOrderSelectContainer = document.getElementById('course-order-select');
         state.searchContainer = document.querySelector('.search-box');
         state.searchInput = document.getElementById("portfolio-search");
         state.coursesSearchInput = document.getElementById('courses-search-input');
@@ -551,7 +545,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.coursesModalStatus = document.getElementById('courses-modal-status');
         state.coursesModalGrade = document.getElementById('courses-modal-grade');
         state.coursesModalCredits = document.getElementById('courses-modal-credits');
-        state.coursesModalName = document.getElementById('courses-modal-name');
         state.coursesModalInfo = document.getElementById('courses-modal-info');
         state.coursesModalProgrammingLanguagesLabel = document.getElementById('courses-modal-programming-languages-label');
         state.coursesModalProgrammingLanguagesContainer = document.getElementById('courses-modal-programming-languages');
@@ -572,21 +565,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return null;
     };
 
-    const showCoursesSkeleton = (count) => {
-        if (!state.coursesTableBody) return;
-        const skeletonRows = Math.max(3, count);
-        const visibleRows = Math.min(5, skeletonRows);
-        let html = '';
-        for (let i = 0; i < visibleRows; i++) {
-            html += `<tr class="courses-skeleton-row">
-                <td colspan="8" style="padding: 8px 0;">
-                    <div class="skeleton-element" style="width: ${80 - i * 10}%; height: 16px; border-radius: 999px;"></div>
-                </td>
-            </tr>`;
-        }
-        state.coursesTableBody.innerHTML = html;
-    };
-
     const getStoredCount = (key) => {
         if (!key) return 0;
         try {
@@ -604,32 +582,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const next = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
             localStorage.setItem(key, String(next));
         } catch (err) {
-        }
-    };
-
-    const primeSkeletons = () => {
-        state.skeletonKey = getSkeletonKey();
-        if (!state.skeletonKey || !state.renderer) return;
-        const cachedCount = getStoredCount(state.skeletonKey);
-
-        if (state.portfolioGrid) {
-            const targetCount = cachedCount > 0 ? cachedCount : 6;
-            state.renderer.showSkeletons(state.portfolioGrid, targetCount);
-            state.didPrimeSkeletons = true;
-            state.primedSkeletonCount = targetCount;
-            state.primedSkeletonTarget = 'portfolio';
-        } else if (state.skillsList) {
-            const targetCount = cachedCount > 0 ? cachedCount : 4;
-            state.renderer.showSkeletons(state.skillsList, targetCount);
-            state.didPrimeSkeletons = true;
-            state.primedSkeletonCount = targetCount;
-            state.primedSkeletonTarget = 'skills';
-        } else if (state.coursesTableBody) {
-            const targetCount = cachedCount > 0 ? cachedCount : 3;
-            showCoursesSkeleton(targetCount);
-            state.didPrimeSkeletons = true;
-            state.primedSkeletonCount = targetCount;
-            state.primedSkeletonTarget = 'courses';
         }
     };
 
@@ -653,10 +605,23 @@ document.addEventListener('DOMContentLoaded', async () => {
             const style = document.createElement('style');
             style.id = 'route-transition-style';
             style.textContent = `
-                ::view-transition-old(page-root),
-                ::view-transition-new(page-root) {
-                    animation-duration: ${ROUTE_FADE_MS}ms;
-                    animation-timing-function: ease;
+                ::view-transition {
+                    background: #000000;
+                }
+
+                ::view-transition-old(page-root) {
+                    display: none !important;
+                }
+
+                ::view-transition-group(page-root),
+                ::view-transition-image-pair(page-root) {
+                    animation: none !important;
+                }
+
+                .nav-container,
+                .nav-links,
+                .mobile-menu-toggle {
+                    view-transition-name: none !important;
                 }
             `;
             document.head.appendChild(style);
@@ -666,25 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const runRouteCrossfade = async (root, updateDom) => {
-        if (!root) {
-            updateDom();
-            return;
-        }
-
-        if (prefersReducedMotion() || typeof document.startViewTransition !== 'function') {
-            updateDom();
-            return;
-        }
-
-        ensureRouteTransitionSetup(root);
-        const transition = document.startViewTransition(() => {
-            updateDom();
-        });
-
-        try {
-            await transition.finished;
-        } catch (err) {
-        }
+        updateDom();
     };
 
     const isSameRouteNavigation = (route, search) => {
@@ -862,6 +809,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
+    const ACHIEVEMENT_AWARDS_SKELETON_KEY = 'portfolio:/achievements:awards';
+
     const renderAchievementAwards = () => {
         const container = document.getElementById('festival-awards-container');
         if (!container) return;
@@ -897,6 +846,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             container.innerHTML = '<p style="color: #8b949e;">No awards found.</p>';
             return;
         }
+
+        setStoredCount(ACHIEVEMENT_AWARDS_SKELETON_KEY, entries.length);
 
         const awardTime = (a) => Utils.parseMonthYearToTime((a && a.date) || '');
         entries.forEach((e) => {
@@ -987,467 +938,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             container.appendChild(card);
-        });
-    };
-
-    function gradeToPoints(grade) {
-        if (!grade) return null;
-        const g = String(grade).trim().toUpperCase();
-        if (g === 'A') return 4.0;
-        if (g === 'A-') return 3.7;
-        if (g === 'B+') return 3.3;
-        if (g === 'B') return 3.0;
-        if (g === 'B-') return 2.7;
-        if (g === 'C+') return 2.3;
-        if (g === 'C') return 2.0;
-        if (g === 'C-') return 1.7;
-        if (g === 'D+') return 1.3;
-        if (g === 'D') return 1.0;
-        if (g === 'D-') return 0.7;
-        if (g === 'F') return 0.0;
-        return null;
-    }
-
-    const getGpaBadgeHtml = (gpaVal) => {
-        if (gpaVal === null || gpaVal === undefined) return '-';
-        const formattedGpa = gpaVal.toFixed(1);
-        const badgeClass = gpaVal >= 3.5 ? 'proficiency-beginner' : (gpaVal >= 3.0 ? 'proficiency-intermediate' : 'proficiency-advanced');
-        const perfectClass = gpaVal >= 3.95 ? ' gpa-perfect' : '';
-        return `<span class="proficiency-badge ${badgeClass}${perfectClass}">${formattedGpa}</span>`;
-    };
-
-    const capitalizeWords = (text) => {
-        if (!text) return '';
-        return text.toString().toLowerCase().replace(/(^|[ \(\/])([a-z])/g, (match, p1, p2) => p1 + p2.toUpperCase());
-    };
-
-    function computeGpaForSchoolIdentifiers(identifiers) {
-        const courses = normalizeCourses(state.allData?.Courses || []);
-        const ids = Array.isArray(identifiers) ? identifiers.map(s => (s || '').toString().trim().toLowerCase()).filter(Boolean) : [];
-        if (!ids.length) return null;
-        let totalPoints = 0;
-        let totalGpaCredits = 0;
-        courses.forEach(c => {
-            const school = (c.school || '').toString().trim().toLowerCase();
-            const matches = ids.some(id => school.includes(id));
-            if (!matches) return;
-            const status = (c.status || '').toString().trim().toLowerCase();
-            if (status !== 'completed') return;
-            const credits = Number.parseFloat(String(c.credits || '').replace(/[^0-9\.\-]/g, ''));
-            const grade = String(c.grade || '').trim();
-            if (grade.toUpperCase() === 'CR') return;
-            const pts = gradeToPoints(grade);
-            if (pts !== null && Number.isFinite(credits)) {
-                totalPoints += pts * credits;
-                totalGpaCredits += credits;
-            }
-        });
-        if (totalGpaCredits <= 0) return null;
-        return (totalPoints / totalGpaCredits);
-    }
-
-    function renderCoursesDashboard() {
-        const courses = normalizeCourses(state.allData?.Courses || []);
-        const completed = courses.filter(c => String(c.status || '').toLowerCase() === 'completed');
-        let totalPoints = 0;
-        let totalGpaCredits = 0;
-        let totalCompletedCredits = 0;
-        completed.forEach(c => {
-            const credits = Number.parseFloat(String(c.credits || '').replace(/[^0-9\.\-]/g, ''));
-            if (Number.isFinite(credits)) totalCompletedCredits += credits;
-            const grade = String(c.grade || '').trim();
-            if (grade.toUpperCase() === 'CR') return;
-            const pts = gradeToPoints(grade);
-            if (pts !== null && Number.isFinite(credits)) {
-                totalPoints += pts * credits;
-                totalGpaCredits += credits;
-            }
-        });
-
-        const gpaEl = document.getElementById('courses-dashboard-gpa');
-        const standingEl = document.getElementById('courses-dashboard-standing');
-        const creditsEl = document.getElementById('courses-dashboard-credits');
-        const percentEl = document.getElementById('courses-dashboard-percent');
-        const progressFillEl = document.getElementById('courses-dashboard-progress-fill');
-
-        if (gpaEl) {
-            const gpaVal = totalGpaCredits > 0 ? (totalPoints / totalGpaCredits) : 0;
-            if (totalGpaCredits > 0) {
-                gpaEl.innerHTML = getGpaBadgeHtml(gpaVal);
-            } else {
-                gpaEl.textContent = '-';
-            }
-        }
-        if (standingEl) {
-            let standing = '-';
-            let standingClass = '';
-            const c = Number.isFinite(totalCompletedCredits) ? totalCompletedCredits : NaN;
-            if (Number.isFinite(c)) {
-                if (c >= 90) { standing = 'Senior'; standingClass = 'standing-senior'; }
-                else if (c >= 60) { standing = 'Junior'; standingClass = 'standing-junior'; }
-                else if (c >= 30) { standing = 'Sophomore'; standingClass = 'standing-sophomore'; }
-                else if (c >= 0) { standing = 'Freshman'; standingClass = 'standing-freshman'; }
-            }
-            standingEl.textContent = standing;
-            standingEl.className = 'dashboard-value' + (standingClass ? ' ' + standingClass : '');
-        }
-        if (creditsEl) {
-            creditsEl.textContent = `${String(totalCompletedCredits || 0)} / 120`;
-        }
-        if (percentEl) {
-            const pct = (totalCompletedCredits / 120) * 100;
-            percentEl.textContent = Number.isFinite(pct) ? `${pct.toFixed(1)}%` : '-';
-        }
-        if (progressFillEl) {
-            const pct = (totalCompletedCredits / 120) * 100;
-            if (Number.isFinite(pct)) progressFillEl.style.width = `${Math.max(0, Math.min(100, pct))}%`;
-            else progressFillEl.style.width = '0%';
-        }
-    }
-
-    const renderAcademicAchievements = () => {
-        const presidentsContainer = document.getElementById('presidents-list-items');
-        const honorRollContainer = document.getElementById('honor-roll-items');
-        const nominationsContainer = document.getElementById('nominations-items');
-        if (!presidentsContainer || !honorRollContainer || !nominationsContainer) return;
-
-        const scrollToFocusedSchoolCard = () => {
-            const params = new URLSearchParams(window.location.search || '');
-            const focusSchool = String(state.pendingFocusSchool || params.get('focusSchool') || '').toLowerCase();
-            if (!focusSchool) return;
-
-            const targetId = focusSchool === 'highschool'
-                ? 'achievement-highschool-card'
-                : focusSchool === 'college'
-                    ? 'achievement-college-card'
-                    : '';
-            if (!targetId) return;
-
-            const targetCard = document.getElementById(targetId);
-            if (targetCard) {
-                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            }
-            state.pendingFocusSchool = '';
-        };
-
-        const rows = Array.isArray(state.allData?.Achievements) ? state.allData.Achievements : [];
-        const grouped = {
-            presidents: [],
-            honorRoll: [],
-            nominations: []
-        };
-
-        const schoolRows = Array.isArray(state.allData?.School) ? state.allData.School : [];
-        const normalizeText = (value) => (value || '').toString().trim().toLowerCase();
-        const formatGpa = (value) => {
-            const raw = (value ?? '').toString().trim();
-            if (!raw) return '';
-            const num = Number.parseFloat(raw);
-            if (!Number.isFinite(num)) return raw;
-            return num.toFixed(1);
-        };
-        const toTag = (schoolName) => {
-            const words = (schoolName || '')
-                .split(/\s+/)
-                .map(word => word.trim())
-                .filter(Boolean)
-                .filter(word => !['of', 'the', 'and'].includes(word.toLowerCase()));
-            const tag = words.map(word => word[0]).join('').toUpperCase();
-            return tag || 'SCHOOL';
-        };
-
-        const findSchoolProfile = (predicate, fallbackName) => {
-            const row = schoolRows.find(predicate);
-            const name = (row?.school || row?.name || fallbackName || '').toString().trim();
-            const abbreviation = (row?.schoolAbbreviation || '').toString().trim();
-            const normalizedSchoolName = name.toLowerCase();
-            const computedGpaVal = computeGpaForSchoolIdentifiers([normalizedSchoolName]);
-            const gpa = (computedGpaVal !== null) ? String(Number(computedGpaVal.toFixed(1))) : formatGpa(row?.gpa);
-            return {
-                name,
-                normalizedName: normalizeText(name),
-                tag: abbreviation || toTag(name),
-                gpa
-            };
-        };
-
-        const collegeProfile = findSchoolProfile(row => {
-            const schoolName = normalizeText(row?.school || row?.name || '');
-            const status = normalizeText(row?.status || '');
-            return schoolName.includes('university') || schoolName.includes('college') || status.includes('enrolled');
-        }, 'Southern New Hampshire University');
-
-        const highSchoolProfile = findSchoolProfile(row => {
-            const schoolName = normalizeText(row?.school || row?.name || '');
-            const status = normalizeText(row?.status || '');
-            return schoolName.includes('high school') || status.includes('graduated');
-        }, 'Emerald Ridge High School');
-
-        const collegeTagEl = document.getElementById('achievement-college-tag');
-        const collegeNameEl = document.getElementById('achievement-college-name');
-        const highSchoolTagEl = document.getElementById('achievement-highschool-tag');
-        const highSchoolNameEl = document.getElementById('achievement-highschool-name');
-        const collegeSchoolSkeletonEl = document.getElementById('achievement-college-school-skeleton');
-        const highSchoolSkeletonEl = document.getElementById('achievement-highschool-school-skeleton');
-        if (collegeTagEl) {
-            collegeTagEl.textContent = collegeProfile.tag;
-            collegeTagEl.style.display = 'inline-block';
-        }
-        if (collegeNameEl) {
-            collegeNameEl.textContent = collegeProfile.name;
-            collegeNameEl.style.display = 'block';
-        }
-        if (highSchoolTagEl) {
-            highSchoolTagEl.textContent = highSchoolProfile.tag;
-            highSchoolTagEl.style.display = 'inline-block';
-        }
-        if (highSchoolNameEl) {
-            highSchoolNameEl.textContent = highSchoolProfile.name;
-            highSchoolNameEl.style.display = 'block';
-        }
-        if (collegeSchoolSkeletonEl) collegeSchoolSkeletonEl.style.display = 'none';
-        if (highSchoolSkeletonEl) highSchoolSkeletonEl.style.display = 'none';
-
-        const collegeSchoolNames = schoolRows
-            .filter(row => {
-                const schoolName = normalizeText(row?.school || row?.name || '');
-                const status = normalizeText(row?.status || '');
-                return schoolName.includes('university') || schoolName.includes('college') || status.includes('enrolled');
-            })
-            .map(row => normalizeText(row?.school || row?.name || ''))
-            .filter(Boolean);
-        const highSchoolNames = schoolRows
-            .filter(row => {
-                const schoolName = normalizeText(row?.school || row?.name || '');
-                const status = normalizeText(row?.status || '');
-                return schoolName.includes('high school') || status.includes('graduated');
-            })
-            .map(row => normalizeText(row?.school || row?.name || ''))
-            .filter(Boolean);
-
-        if (!collegeSchoolNames.length) {
-            collegeSchoolNames.push(collegeProfile.normalizedName, 'southern new hampshire university', 'southern new hampshire');
-        }
-        if (!highSchoolNames.length) {
-            highSchoolNames.push(highSchoolProfile.normalizedName, 'emerald ridge high school', 'emerald ridge');
-        }
-
-        const collegeGpaEl = document.getElementById('achievement-college-gpa');
-        const collegeGpaSkeletonEl = document.getElementById('achievement-college-gpa-skeleton');
-        const collegeGpaTextEl = document.getElementById('achievement-college-gpa-text');
-        const collegeGpaValueEl = document.getElementById('achievement-college-gpa-value');
-        if (collegeGpaEl && collegeGpaValueEl && collegeGpaTextEl && collegeGpaSkeletonEl) {
-            const computedCollegeGpa = computeGpaForSchoolIdentifiers(collegeSchoolNames);
-            if (computedCollegeGpa !== null) {
-                collegeGpaValueEl.innerHTML = getGpaBadgeHtml(computedCollegeGpa);
-                collegeGpaEl.style.display = 'block';
-                collegeGpaSkeletonEl.style.display = 'none';
-                collegeGpaTextEl.style.display = 'inline';
-            } else if (collegeProfile.gpa) {
-                const val = Number.parseFloat(collegeProfile.gpa);
-                collegeGpaValueEl.innerHTML = Number.isFinite(val) ? getGpaBadgeHtml(val) : collegeProfile.gpa;
-                collegeGpaEl.style.display = 'block';
-                collegeGpaSkeletonEl.style.display = 'none';
-                collegeGpaTextEl.style.display = 'inline';
-            } else {
-                collegeGpaValueEl.textContent = '';
-                collegeGpaEl.style.display = 'none';
-                collegeGpaSkeletonEl.style.display = 'inline-block';
-                collegeGpaTextEl.style.display = 'none';
-            }
-        }
-
-        rows.forEach(row => {
-            const type = (row?.type || '').toString().trim().toLowerCase();
-            const school = (row?.school || '').toString().trim().toLowerCase();
-            const name = (row?.name || '').toString().trim();
-            const link = (row?.link || '').toString().trim();
-            const info = (row?.info || '').toString().trim();
-            if (!name) return;
-            const date = (row?.date || '').toString().trim();
-            const item = { name, link, info, date };
-            const isSNHU = collegeSchoolNames.some(schoolName => school.includes(schoolName));
-            const isERHS = highSchoolNames.some(schoolName => school.includes(schoolName));
-
-            if (type.includes('president') && (isSNHU || !school)) grouped.presidents.push({ ...item, category: "President's List" });
-            else if (type.includes('honor') && (isSNHU || !school)) grouped.honorRoll.push({ ...item, category: 'Honor Roll' });
-            else if (type.includes('nomination') && (isERHS || !school)) grouped.nominations.push({ ...item, category: 'Nominations' });
-        });
-
-        const meritVerifyModalExtra = 'The destination is SNHU Merit Pages, where the official recognition badge or listing for this term is displayed.';
-
-        const renderInlineItems = (container, items, textColor = '#58a6ff', extraOptions) => {
-            const opts = extraOptions && typeof extraOptions === 'object' ? extraOptions : {};
-            const meritExtra = opts.meritExtra;
-            const omitDescription = opts.omitDescription === true;
-            container.innerHTML = '';
-            if (!items.length) {
-                const empty = document.createElement('span');
-                empty.style.color = '#8b949e';
-                empty.style.fontSize = '0.9rem';
-                empty.textContent = 'No entries yet.';
-                container.appendChild(empty);
-                return;
-            }
-
-            items.forEach(item => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'achievement-inline-item';
-
-                const hasLink = /^https?:\/\//i.test(item.link);
-                if (hasLink) {
-                    const anchor = document.createElement('a');
-                    anchor.href = item.link;
-                    anchor.target = '_self';
-                    anchor.rel = 'noopener noreferrer';
-                    anchor.className = 'inline-action-button';
-                    anchor.style.setProperty('--inline-action-color', textColor);
-                    anchor.innerHTML = `${item.name} ${Utils.lucideChevronRightSvg({ size: 14 })}`;
-                    anchor.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        let modalInfo = '';
-                        if (meritExtra) {
-                            modalInfo = [String(item.info || '').trim(), meritExtra].filter(Boolean).join('\n\n');
-                        } else {
-                            modalInfo = item.info || '';
-                        }
-                        openExternalLinkWithPrompt(
-                            item.link,
-                            item.name || 'External Link',
-                            item.category || 'Achievement',
-                            modalInfo || meritExtra || ''
-                        );
-                    });
-                    wrapper.appendChild(anchor);
-                } else {
-                    const plain = document.createElement('span');
-                    plain.style.color = '#e1e4e8';
-                    plain.style.fontSize = '0.9rem';
-                    plain.textContent = item.name;
-                    wrapper.appendChild(plain);
-                }
-
-                if (!omitDescription && item.info) {
-                    const info = document.createElement('span');
-                    info.style.color = '#8b949e';
-                    info.style.fontSize = '0.82rem';
-                    info.style.whiteSpace = 'pre-line';
-                    info.style.lineHeight = '1.4';
-                    info.textContent = item.info;
-                    wrapper.appendChild(info);
-                }
-
-                container.appendChild(wrapper);
-            });
-        };
-
-        const sortAchievementTermsNewestFirst = (items) => {
-            items.sort(
-                (a, b) =>
-                    Utils.parseAchievementRecencyMs(b.name, b.date) - Utils.parseAchievementRecencyMs(a.name, a.date)
-            );
-        };
-        sortAchievementTermsNewestFirst(grouped.presidents);
-        sortAchievementTermsNewestFirst(grouped.honorRoll);
-
-        renderInlineItems(presidentsContainer, grouped.presidents, '#58a6ff', {
-            meritExtra: meritVerifyModalExtra,
-            omitDescription: true
-        });
-        renderInlineItems(honorRollContainer, grouped.honorRoll, '#58a6ff', {
-            meritExtra: meritVerifyModalExtra,
-            omitDescription: true
-        });
-        renderInlineItems(nominationsContainer, grouped.nominations, '#e1e4e8');
-        scrollToFocusedSchoolCard();
-    };
-
-    const renderBioEducation = () => {
-        const educationList = document.getElementById('education-list');
-        if (!educationList) return;
-
-        const rows = Array.isArray(state.allData?.School) ? state.allData.School : [];
-        if (!rows.length) {
-            educationList.innerHTML = '<p style="color: #8b949e; text-align: center; padding: 20px;">Education information is loading.</p>';
-            return;
-        }
-
-        const getTag = (schoolName) => {
-            const words = schoolName
-                .split(/\s+/)
-                .map(word => word.trim())
-                .filter(Boolean)
-                .filter(word => !['of', 'the', 'and'].includes(word.toLowerCase()));
-            const tag = words.map(word => word[0]).join('').toUpperCase();
-            return tag || 'SCHOOL';
-        };
-
-        const getProgram = (schoolName) => {
-            const normalized = schoolName.toLowerCase();
-            if (normalized.includes('southern new hampshire')) return 'Bachelor of Science in Computer Science (Software Engineering)';
-            if (normalized.includes('high school')) return 'High School Diploma';
-            return 'Education';
-        };
-
-        const formatGpa = (value) => {
-            const raw = (value ?? '').toString().trim();
-            if (!raw) return '';
-            const num = Number.parseFloat(raw);
-            if (!Number.isFinite(num)) return raw;
-            return num.toFixed(1);
-        };
-
-        educationList.innerHTML = rows.map((row, index) => {
-            const schoolName = (row?.school || row?.name || '').toString().trim();
-            const schoolAbbreviation = (row?.schoolAbbreviation || '').toString().trim();
-            const location = (row?.location || '').toString().trim();
-            const started = (row?.started || '').toString().trim();
-            const status = (row?.status || '').toString().trim();
-            const gpa = formatGpa(row?.gpa);
-            const tag = schoolAbbreviation || getTag(schoolName);
-            const program = getProgram(schoolName);
-            const normalizedSchoolName = schoolName.toLowerCase();
-            const focusSchool = normalizedSchoolName.includes('high school') ? 'highschool' : 'college';
-            const marginTop = index === 0 ? '20px' : '12px';
-            const computedGpaVal = computeGpaForSchoolIdentifiers([normalizedSchoolName]);
-            const displayGpaHtml = (computedGpaVal !== null) ? getGpaBadgeHtml(computedGpaVal) : (gpa ? getGpaBadgeHtml(Number.parseFloat(gpa)) : '');
-            const gpaRow = displayGpaHtml
-                ? `<div class="gpa-row" style="margin-top: 12px;">
-                <span><span class="gpa-label">CUMULATIVE GPA:</span> ${displayGpaHtml}</span>
-            </div>`
-                : '';
-            const achievementsLinkRow = `<div style="font-size: 0.9rem; margin-top: 10px;">
-                <a href="#" class="education-achievements-link inline-action-button" data-focus-school="${focusSchool}">View Achievements ${Utils.lucideChevronRightSvg({ size: 16 })}</a>
-            </div>`;
-
-            return `
-    <div class="achievement-card" style="margin-top: ${marginTop};">
-        <div class="achievement-info">
-            <span class="software-tag">${tag}</span>
-            <h3>${schoolName}</h3>
-            <p>${program}</p>
-            <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 5px;">${location}</p>
-            <div class="gpa-row" style="margin-top: 10px; flex-wrap: wrap; gap: 25px;">
-                <span><span class="gpa-label">STARTED:</span> ${capitalizeWords(started)}</span>
-                <span><span class="gpa-label">STATUS:</span> ${capitalizeWords(status)}</span>
-            </div>
-            ${gpaRow}
-            ${achievementsLinkRow}
-        </div>
-    </div>`;
-        }).join('');
-
-        educationList.querySelectorAll('.education-achievements-link').forEach(link => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                const focusSchool = String(link.getAttribute('data-focus-school') || '').toLowerCase();
-                if (!focusSchool) return;
-                state.pendingFocusSchool = focusSchool;
-                loadRoute('/achievements', '', {
-                    push: false,
-                    historyUrl: buildUrl('/', '')
-                });
-            });
         });
     };
 
@@ -2014,6 +1504,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const next = ev.relatedTarget;
             if (next && parentEl.contains(next)) return;
             closeAllColumnFilterMenus();
+            syncDropdownScrollLock();
         });
     };
 
@@ -2210,6 +1701,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             button.setAttribute('aria-expanded', 'false');
             syncCoursesModalScrollLock(false);
             syncColumnFilterVisualState(button, menu, usableDefinitions, selected, onChange);
+            if (typeof window.syncDropdownScrollLock === 'function') window.syncDropdownScrollLock();
         };
 
         const prevSubmenuClearByKey = new Map();
@@ -2500,6 +1992,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const next = ev.relatedTarget;
                 if (next && menu.contains(next)) return;
                 closeMenu();
+                if (typeof window.syncDropdownScrollLock === 'function') window.syncDropdownScrollLock();
             });
             item.addEventListener('mouseenter', (ev) => {
                 if (ev.target.closest?.('.column-filter-submenu')) return;
@@ -2586,7 +2079,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
             menu.addEventListener('mouseleave', () => {
-                if (menu.dataset.submenuHovered === 'true') closeMenu();
+                closeMenu();
+                if (typeof window.syncDropdownScrollLock === 'function') window.syncDropdownScrollLock();
             });
         }
 
@@ -2703,7 +2197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getDefaultSortState = (scope) => {
         if (scope === 'courses') return { sortKey: 'status', sortOrder: 'asc' };
-        if (scope === 'skills') return { sortKey: 'lastUsed', sortOrder: 'desc' };
+        if (scope === 'skills') return { sortKey: 'name', sortOrder: 'asc' };
         return { sortKey: null, sortOrder: null };
     };
 
@@ -2714,18 +2208,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const getNextSortState = (scope, currentKey, currentOrder, targetKey) => {
         const defaultState = getDefaultSortState(scope);
-        if (currentKey !== targetKey || !currentOrder) return { sortKey: targetKey, sortOrder: 'asc' };
-        if (targetKey === defaultState.sortKey) {
-            if (isDefaultSortState(scope, currentKey, currentOrder)) {
-                return {
-                    sortKey: targetKey,
-                    sortOrder: defaultState.sortOrder === 'asc' ? 'desc' : 'asc'
-                };
-            }
-            return defaultState;
+        if (!targetKey) return defaultState;
+        if (currentKey !== targetKey || !currentOrder) {
+            return { sortKey: targetKey, sortOrder: 'asc' };
         }
-        if (currentOrder === 'asc') return { sortKey: targetKey, sortOrder: 'desc' };
-        return getDefaultSortState(scope);
+        if (targetKey === defaultState.sortKey) {
+            return {
+                sortKey: targetKey,
+                sortOrder: currentOrder === 'asc' ? 'desc' : 'asc'
+            };
+        }
+        if (currentOrder === 'asc') {
+            return { sortKey: targetKey, sortOrder: 'desc' };
+        }
+        return {
+            sortKey: defaultState.sortKey,
+            sortOrder: defaultState.sortOrder
+        };
     };
 
     const bindSkillTableSortButtons = () => {
@@ -3751,7 +3250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const setupCoursesControls = () => {
-        if (!state.isCoursesPage) return;
+        if (!state.coursesTableBody) return;
 
         bindCourseTableSortButtons();
         if (state.syncCourseSortIndicators) state.syncCourseSortIndicators();
@@ -3795,7 +3294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const renderCourses = () => {
-        if (!state.isCoursesPage || !state.coursesTableBody) return;
+        if (!state.coursesTableBody) return;
         renderCoursesDashboard();
         setupCoursesControls();
         applyCoursesFilterAndSort();
@@ -4000,28 +3499,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if (route === '/skills') {
             if (!state.allData.skills) sheetsNeeded.push('skills');
-            if (!state.allData['Course Projects']) sheetsNeeded.push('Course Projects');
-        }
-        if (route === '/courses') {
-            if (!state.allData.Courses) sheetsNeeded.push('Courses');
-            if (!state.allData['Course Projects']) sheetsNeeded.push('Course Projects');
-            if (!state.allData.skills) sheetsNeeded.push('skills');
         }
         if (route === '/' || route === '/bio') {
-            if (!state.allData.School) sheetsNeeded.push('School');
-            if (!state.allData.Courses) sheetsNeeded.push('Courses');
-            if (!state.allData['Course Projects']) sheetsNeeded.push('Course Projects');
             if (!state.allData.games) sheetsNeeded.push('games');
             if (!state.allData.videos) sheetsNeeded.push('videos');
             if (!state.allData.skills) sheetsNeeded.push('skills');
         }
         if (route === '/achievements') {
             if (!state.allData.videos) sheetsNeeded.push('videos');
-            if (!state.allData.skills) sheetsNeeded.push('skills');
-            if (!state.allData.Achievements) sheetsNeeded.push('Achievements');
-            if (!state.allData.School) sheetsNeeded.push('School');
-            if (!state.allData.Courses) sheetsNeeded.push('Courses');
-            if (!state.allData['Course Projects']) sheetsNeeded.push('Course Projects');
         }
         if (route === '/activities' && !state.allData.Activities) sheetsNeeded.push('Activities');
 
@@ -4051,6 +3536,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const applyDataForRoute = (token) => {
         if (!state.renderer) return;
         const dataPromise = loadDataOnce();
+
+        if (state.currentRoute === '/achievements') {
+            const awardsContainer = document.getElementById('festival-awards-container');
+            if (awardsContainer && !state.didPrimeSkeletons) {
+                const skeletonCount = getStoredCount(ACHIEVEMENT_AWARDS_SKELETON_KEY) || 3;
+                state.renderer.showSkeletons(awardsContainer, skeletonCount);
+                state.didPrimeSkeletons = true;
+                state.primedSkeletonTarget = 'achievement-awards';
+                state.primedSkeletonCount = skeletonCount;
+            }
+        }
+
         dataPromise.then(result => {
             const data = result.data;
             const isCached = result.allCached;
@@ -4059,20 +3556,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (state.currentRoute === '/achievements') {
                 const renderAchievementsNow = () => {
                     if (state.routeToken !== token) return;
-                    renderAcademicAchievements();
                     setupAchievementVideoLinks(data.videos || []);
                     renderAchievementAwards();
                 };
-
-                if (isCached) {
-                    setTimeout(renderAchievementsNow, 120);
-                } else {
-                    renderAchievementsNow();
-                }
+                renderAchievementsNow();
             }
 
             if (state.currentRoute === '/' || state.currentRoute === '/bio') {
-                renderBioEducation();
                 setupPortraitMediaLoadState();
                 renderRecentWork();
             }
@@ -4081,22 +3571,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderActivities();
             }
 
-            if (state.currentRoute === '/courses') {
-                const allCoursesCount = normalizeCourses(data.Courses || []).length;
-                setStoredCount(state.skeletonKey, allCoursesCount);
-                renderCourses();
-            }
-
-            if ((data.Courses || []).length && (data.skills || []).length && state.modalManager) {
-                preloadProgrammingLanguageIconsForCourses(data.Courses, data['Course Projects']).catch(() => { });
-            }
-
             if (state.portfolioGrid) {
                 const pageType = state.currentRoute === '/games' ? 'games' : 'videos';
                 const projectData = data[pageType] || [];
                 setStoredCount(state.skeletonKey, projectData.length);
 
-                if (!isCached && (!state.didPrimeSkeletons || state.primedSkeletonTarget !== 'portfolio' || state.primedSkeletonCount !== projectData.length)) {
+                if (!state.didPrimeSkeletons || state.primedSkeletonTarget !== 'portfolio' || state.primedSkeletonCount !== projectData.length) {
                     state.renderer.showSkeletons(state.portfolioGrid, projectData.length);
                 }
                 if (projectData.length > 0 && state.filterCards) {
@@ -4188,12 +3668,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.isSkillsPage = !!state.skillsList;
         state.isAchievementsPage = route === '/achievements';
         state.isPortfolioPage = !!state.portfolioGrid;
-        state.isCoursesPage = route === '/courses';
         const isGamesOrVideosPage = route === '/videos' || route === '/games';
         if (state.portfolioFilterGroup) state.portfolioFilterGroup.style.display = isGamesOrVideosPage ? 'flex' : 'none';
         if (state.typeSelectContainer && state.typeSelectContainer.parentElement) state.typeSelectContainer.parentElement.style.display = isGamesOrVideosPage ? 'none' : 'flex';
         if (state.toolSelectContainer && state.toolSelectContainer.parentElement) state.toolSelectContainer.parentElement.style.display = isGamesOrVideosPage ? 'none' : 'flex';
-        if (state.isSkillsPage) state.selectedSort = 'name';
+        if (state.isSkillsPage) {
+            state.selectedSort = 'name';
+            state.selectedOrder = 'asc';
+        }
         else if (state.isPortfolioPage) state.selectedSort = 'date';
 
         state.modalManager = new ModalManager(state);
@@ -4365,116 +3847,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     window.navigateTo = navigate;
 
-    const renderInitialRouteSkeleton = (route) => {
-        const root = document.getElementById('page-root');
-        if (!root) return;
-
-        const pageIntroSkeleton = (titleWidth = 220, subtitleWidth = 460) => `
-            <div class="page-intro">
-                <div class="skeleton-element" style="width: ${titleWidth}px; height: 24px; border-radius: 6px; margin-bottom: 10px;"></div>
-                <div class="skeleton-element" style="width: ${subtitleWidth}px; height: 14px; border-radius: 4px;"></div>
-            </div>
-        `;
-
-        const controlsSkeleton = () => `
-            <div data-fragment="controls" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px;">
-                <div class="skeleton-element" style="height: 36px; width:100%; border-radius: 10px;"></div>
-                <div class="skeleton-element" style="height: 36px; width:100%; border-radius: 10px;"></div>
-                <div class="skeleton-element" style="height: 36px; width:100%; border-radius: 10px;"></div>
-                <div class="skeleton-element" style="height: 36px; width:100%; border-radius: 10px;"></div>
-                <div class="skeleton-element" style="height: 36px; width:100%; border-radius: 10px;"></div>
-            </div>
-        `;
-
-        const tableSkeleton = (rows = 3, isSkills = false) => {
-            const headerCols = isSkills
-                ? ['Name', 'Category']
-                : ['ID', 'Name', 'School', 'Type', 'Status', 'Credits', 'Year', 'Grade'];
-
-            const rowCells = () => {
-                if (isSkills) {
-                    const widths = [110, 90];
-                    return widths.map(width => `<td><div class="skeleton-element" style="width: ${width}px; height: 14px; border-radius: 999px;"></div></td>`).join('');
-                }
-
-                const widths = [40, 180, 120, 80, 70, 60, 60, 50];
-                return widths.map(width => `<td><div class="skeleton-element" style="width: ${width}px; height: 14px; border-radius: 999px;"></div></td>`).join('');
-            };
-
-            const rowsHtml = Array.from({ length: rows }).map(() => `
-                <tr class="courses-skeleton-row">
-                    ${rowCells()}
-                </tr>
-            `).join('');
-
-            return `
-                <div class="courses-table-shell ${isSkills ? 'skills-table-shell' : ''}" style="margin-top:16px;">
-                    <table class="courses-table ${isSkills ? 'skills-table' : ''}">
-                        <thead>
-                            <tr>${headerCols.map(col => `<th>${col}</th>`).join('')}</tr>
-                        </thead>
-                        <tbody>${rowsHtml}</tbody>
-                    </table>
-                </div>
-            `;
-        };
-
-        const projectSkeletonCards = (count = 6) => {
-            let html = '<div id="portfolio-grid" class="portfolio-grid">';
-            for (let i = 0; i < count; i++) {
-                html += '<div class="portfolio-card skeleton-item"><div class="card-thumb"><div class="skeleton-element" style="width:100%;height:100%;border-radius:8px;"></div></div><div class="card-content"><div class="card-info"><div class="skeleton-element" style="width: 38%; height: 11px; margin-bottom: 8px; border-radius: 999px;"></div><div class="skeleton-element" style="width: 78%; height: 18px; margin-bottom: 10px; border-radius: 999px;"></div><div class="skeleton-element" style="width: 42%; height: 14px; border-radius: 999px;"></div></div></div></div>';
-            }
-            html += '</div>';
-            return html;
-        };
-
-        switch (route) {
-            case '/videos':
-            case '/games':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(220, 460)}
-                    ${projectSkeletonCards(6)}
-                `;
-                return;
-            case '/bio':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(240, 420)}
-                    ${controlsSkeleton()}
-                    <div style="margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;">
-                        ${Array.from({ length: 3 }).map(() => '<div class="skeleton-element" style="height: 108px; border-radius: 8px;"></div>').join('')}
-                    </div>
-                `;
-                return;
-            case '/activities':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(220, 420)}
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px;">
-                        ${Array.from({ length: 4 }).map(() => '<div class="achievement-card"><div class="skeleton-element" style="width:100%;height:110px;border-radius:8px;"></div></div>').join('')}
-                    </div>
-                `;
-                return;
-            case '/achievements':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(280, 420)}
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:20px;">
-                        ${Array.from({ length: 3 }).map(() => '<div class="achievement-card"><div class="skeleton-element" style="width:100%;height:120px;border-radius:8px;"></div></div>').join('')}
-                    </div>
-                `;
-                return;
-            case '/skills':
-                root.innerHTML = `
-                    ${pageIntroSkeleton(220, 420)}
-                    ${controlsSkeleton()}
-                `;
-                return;
-            default:
-                root.innerHTML = `
-                    ${pageIntroSkeleton(160, 300)}
-                `;
-                return;
-        }
-    };
-
     const injectSharedHeaderFooter = async () => {
         const headerEl = document.getElementById('shared-header');
         const footerEl = document.getElementById('shared-footer');
@@ -4533,10 +3905,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const shouldForceMobileNav = () => {
                 if (window.matchMedia('(max-width: 900px)').matches) return true;
+                const hadForcedClass = navContainer?.classList.contains('nav-force-mobile');
+                if (hadForcedClass) navContainer.classList.remove('nav-force-mobile');
+                const hardOverflow = !!navContainer && navContainer.scrollWidth > (navContainer.clientWidth + 2);
+                const linksOverflow = navLinks.scrollWidth > (navLinks.clientWidth + 2);
                 const navItems = Array.from(navLinks.querySelectorAll('a, button')).filter(item => item.offsetParent !== null);
-                if (navItems.length < 2) return false;
+                if (navItems.length < 2) {
+                    if (hadForcedClass) navContainer.classList.add('nav-force-mobile');
+                    return hardOverflow || linksOverflow;
+                }
+                const navBrand = navContainer?.querySelector('.nav-brand');
                 const firstTop = navItems[0].offsetTop;
-                return navItems.some(item => Math.abs(item.offsetTop - firstTop) > 2);
+                const isWrapped = navItems.some(item => Math.abs(item.offsetTop - firstTop) > 2);
+                const brandRect = navBrand?.getBoundingClientRect();
+                const firstItemLeft = navItems.reduce((min, item) => Math.min(min, item.getBoundingClientRect().left), Number.POSITIVE_INFINITY);
+                const crowdingThresholdPx = 14;
+                const isCramped = !!brandRect && Number.isFinite(firstItemLeft)
+                    && (firstItemLeft - brandRect.right) < crowdingThresholdPx;
+                if (hadForcedClass) navContainer.classList.add('nav-force-mobile');
+                return isWrapped || hardOverflow || linksOverflow || isCramped;
             };
 
             const syncNavMode = () => {
@@ -4578,6 +3965,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             window.addEventListener('resize', onViewportChange);
             window.addEventListener('orientationchange', onViewportChange);
+            if (document.fonts?.ready) {
+                document.fonts.ready.then(syncNavMode).catch(() => { });
+            }
             requestAnimationFrame(syncNavMode);
         }
 

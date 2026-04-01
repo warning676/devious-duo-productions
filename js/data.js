@@ -168,7 +168,7 @@ const LOCAL_DATA = {
         { name: 'Adobe Photoshop', badge: 'Design', info: 'Used for visual assets and supporting graphics.', icon: 'images/skills/icon-ps.webp' },
         { name: 'Adobe Illustrator', badge: 'Design', info: 'Used for vector artwork and title/logo elements.', icon: 'images/skills/icon-ai.webp' },
         { name: 'Microsoft PowerPoint', badge: 'Game Development', info: 'Used to build Craig of the Hills as an interactive PowerPoint game and to make thumbnails for videos.', icon: 'images/skills/icon-powerpoint.webp' },
-        { name: 'Unreal Engine 5', badge: 'Real-Time Production', info: 'Used for environments, effects, and character-driven scenes.', icon: 'images/skills/icon-ue5.webp' },
+        { name: 'Unreal Engine 5', badge: 'Game Development', info: 'Used for environments, effects, and character-driven scenes.', icon: 'images/skills/icon-ue5.webp' },
         { name: 'Blueprints', badge: 'Game Development', info: 'Used for gameplay scripting and interaction logic in Unreal Engine 5 projects.', icon: 'images/skills/icon-ue5.webp' },
         { name: 'Unity', badge: 'Game Development', info: 'Used for prototype scenes and gameplay experiments.', icon: 'images/skills/icon-unity.webp' }
     ],

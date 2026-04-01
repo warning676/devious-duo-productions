@@ -14,6 +14,18 @@ html {
     scrollbar-gutter: stable;
     scrollbar-width: thin;
     scrollbar-color: #30363d transparent;
+    background: #000000;
+    position: relative;
+}
+
+html::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(circle 720px at 12vw 10vh, rgba(255, 31, 31, 0.14) 0%, rgba(255, 31, 31, 0.08) 34%, rgba(255, 31, 31, 0) 62%), #000000;
+    background-repeat: no-repeat;
 }
 
 html.scroll-lock,
@@ -47,10 +59,12 @@ body {
     padding: 15px 40px calc(60px + var(--footer-buffer)) 40px;
     line-height: 1.6;
     color: #e1e4e8;
-    background: radial-gradient(circle at 12% 10%, rgba(255, 31, 31, 0.14) 0%, rgba(255, 31, 31, 0) 36%), #000000;
+    background: transparent;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: 1;
 }
 
 main#page-root {
@@ -339,7 +353,7 @@ footer[data-include="html/footer.html"] {
 @keyframes skeleton-pulse {
     0% {
         background-position: 100% 0;
-        opacity: 0.8;
+        opacity: 0.95;
     }
 
     50% {
@@ -348,7 +362,7 @@ footer[data-include="html/footer.html"] {
 
     100% {
         background-position: -100% 0;
-        opacity: 0.82;
+        opacity: 0.95;
     }
 }
 
@@ -833,8 +847,9 @@ footer[data-include="html/footer.html"] {
     flex: 1 1 0;
     min-width: 0;
     text-align: left;
-    font-size: 1rem;
+    font-size: 1.1rem;
     line-height: 1.38;
+    font-weight: 600;
 }
 
 .modal-award-date {
@@ -936,10 +951,27 @@ footer[data-include="html/footer.html"] {
     width: 100%;
     transition: border-color 0.3s ease;
     touch-action: manipulation;
+    position: relative;
+}
+
+.portfolio-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255, 31, 31, 0.08) 0%, rgba(255, 31, 31, 0.18) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+    border-radius: 6px;
 }
 
 .portfolio-card:hover {
     border-color: #ff1f1f;
+}
+
+.portfolio-card:hover::before {
+    opacity: 1;
 }
 
 .card-thumb {
@@ -952,6 +984,7 @@ footer[data-include="html/footer.html"] {
     align-items: center;
     justify-content: center;
     position: relative;
+    z-index: 2;
 }
 
 .card-thumb img {
@@ -961,7 +994,7 @@ footer[data-include="html/footer.html"] {
 }
 
 .card-content {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     padding: 16px 16px 18px;
     display: flex;
     justify-content: space-between;
@@ -970,22 +1003,12 @@ footer[data-include="html/footer.html"] {
     min-height: 0;
     background: transparent;
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    box-sizing: border-box;
 }
 
 .card-content::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(to bottom, rgba(255, 31, 31, 0.08) 0%, rgba(255, 31, 31, 0.18) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    z-index: 0;
-}
-
-.portfolio-card:hover .card-content::before {
-    opacity: 1;
+    display: none;
 }
 
 .card-content > * {
@@ -2622,7 +2645,6 @@ body.dropdown-scroll-lock {
     grid-template-columns: 1.9fr 0.7fr;
 }
 
-
 .modal-media-pane {
     padding: 30px;
     border-right: 1px solid rgba(255, 31, 31, 0.42);
@@ -2644,7 +2666,7 @@ body.dropdown-scroll-lock {
 
 .modal-info-pane {
     padding: 40px 35px;
-    max-width: 500px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
@@ -2655,8 +2677,8 @@ body.dropdown-scroll-lock {
     margin: 0 0 12px;
     padding: 0;
     font-family: var(--font-display);
-    font-size: 0.9rem;
-    font-weight: 400;
+    font-size: 1.1rem;
+    font-weight: 600;
     line-height: 1.3;
     color: #ffffff;
     text-transform: uppercase;
@@ -2669,6 +2691,7 @@ body.dropdown-scroll-lock {
     align-items: flex-start;
     gap: 8px;
     margin: 0 0 22px;
+    transition: all 0.26s ease;
 }
 
 #project-info .modal-project-meta {
@@ -2701,9 +2724,9 @@ body.dropdown-scroll-lock {
 }
 
 #project-info .modal-project-description {
-    margin: 0 0 24px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid rgba(255, 31, 31, 0.42);
+    margin: 0 0 20px;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 #project-info.no-awards .modal-project-description {
@@ -3108,6 +3131,13 @@ body.dropdown-scroll-lock {
     z-index: 2;
 }
 
+.search-header .search-container .input-clear-button,
+.search-header .search-container .input-clear-button.close-button {
+    border-color: transparent;
+    outline: none;
+    box-shadow: none;
+}
+
 .input-clear-button.visible {
     display: flex !important;
 }
@@ -3115,6 +3145,21 @@ body.dropdown-scroll-lock {
 .input-clear-button:hover {
     color: #e1e4e8;
     background-color: var(--button-hover-bg);
+}
+
+.search-header .search-container .input-clear-button:hover,
+.search-header .search-container .input-clear-button.close-button:hover {
+    border-color: transparent;
+    background-color: var(--button-hover-bg);
+}
+
+.search-header .search-container .input-clear-button:focus,
+.search-header .search-container .input-clear-button:focus-visible,
+.search-header .search-container .input-clear-button.close-button:focus,
+.search-header .search-container .input-clear-button.close-button:focus-visible {
+    outline: none;
+    border-color: transparent;
+    box-shadow: none;
 }
 
 .input-clear-button:active {
@@ -4629,12 +4674,12 @@ body.dropdown-scroll-lock {
     max-width: 300px;
     background-color: #000000;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: stretch !important;
     transition: right 0.3s ease;
     z-index: 2500;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
-    padding: 18px 14px;
+    padding: 72px 14px 18px;
     gap: 10px;
     overflow-y: auto;
     overflow-x: hidden;
@@ -4655,6 +4700,25 @@ body.dropdown-scroll-lock {
     border-radius: 10px;
     white-space: normal;
     text-align: center;
+}
+
+.nav-container.nav-force-mobile .mobile-menu-toggle.open span:nth-child(1) {
+    transform: translateY(10.5px) rotate(45deg);
+}
+
+.nav-container.nav-force-mobile .mobile-menu-toggle.open {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 2601;
+}
+
+.nav-container.nav-force-mobile .mobile-menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-container.nav-force-mobile .mobile-menu-toggle.open span:nth-child(3) {
+    transform: translateY(-10.5px) rotate(-45deg);
 }
 
 @media (max-width: 680px) {
@@ -4904,14 +4968,6 @@ button.inline-action-button {
     font-weight: 600;
 }
 
-.modal-skill-course-project-card-desc {
-    margin: 0;
-    color: #8b949e;
-    font-size: 0.86rem;
-    line-height: 1.5;
-    white-space: pre-line;
-}
-
 .courses-modal-featured-languages .software-tag.software-tag-current-skill {
     cursor: default;
 }
@@ -4991,14 +5047,6 @@ button.inline-action-button {
     transform: scale(0.955);
 }
 
-@media (max-width: 600px) {
-    .controls.courses-controls .controls-skills-row .search-box {
-        flex: 1 1 100%;
-        max-width: 100%;
-        margin-right: 0;
-    }
-}
-
 .search-modal,
 .modal {
     background-color: rgba(0, 0, 0, 0.85) !important;
@@ -5060,12 +5108,12 @@ button.inline-action-button {
         max-width: 300px;
         background-color: #000000;
         flex-direction: column !important;
-        justify-content: center !important;
+        justify-content: flex-start !important;
         align-items: stretch !important;
         transition: right 0.3s ease;
         z-index: 2500;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
-        padding: 18px 14px;
+        padding: 72px 14px 18px;
         gap: 10px;
         overflow-y: auto;
         overflow-x: hidden;
@@ -5090,6 +5138,13 @@ button.inline-action-button {
 
     .mobile-menu-toggle.open span:nth-child(1) {
         transform: translateY(10.5px) rotate(45deg);
+    }
+
+    .mobile-menu-toggle.open {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 2601;
     }
     
     .mobile-menu-toggle.open span:nth-child(2) {

@@ -22,7 +22,7 @@ class Renderer {
 
     showSkeletons(container, count) {
         if (!container) return;
-        const isPortfolioGrid = container.id === 'portfolio-grid' || container.id === 'recent-work-grid';
+        const isPortfolioGrid = container.id === 'portfolio-grid' || container.id === 'recent-work-grid' || container.id === 'festival-awards-container';
         const isSkillsGrid = container.id === 'skills-list';
         container.style.visibility = 'visible';
         container.style.display = isPortfolioGrid ? 'grid' : 'block';
@@ -84,6 +84,16 @@ class Renderer {
                     info.appendChild(infoSkel);
                 }
                 content.appendChild(info);
+                const awards = document.createElement('div');
+                awards.className = 'card-awards';
+                const awardsSkel = document.createElement('div');
+                awardsSkel.className = 'skeleton-element';
+                awardsSkel.style.width = '108px';
+                awardsSkel.style.height = '14px';
+                awardsSkel.style.borderRadius = '999px';
+                awardsSkel.style.marginTop = '2px';
+                awards.appendChild(awardsSkel);
+                content.appendChild(awards);
                 card.appendChild(content);
                 container.appendChild(card);
             }
@@ -192,7 +202,7 @@ class Renderer {
             });
         });
 
-        Promise.all(projectPromises).then(cards => {
+        Promise.all(projectPromises).then((cards) => {
             const validCards = cards.filter(Boolean);
             
             if (hasInitialSkeletons) {

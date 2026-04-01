@@ -55,7 +55,14 @@ function resetGlobalSearchTypeFilters() {
 function renderGlobalSearchEmptyPlaceholder() {
     const el = document.getElementById('search-results');
     if (!el) return;
-    el.innerHTML = '<div class="global-search-results-layout"><div class="global-search-results-meta global-search-results-meta--reserved" aria-hidden="true"></div></div>';
+    el.innerHTML = `
+        <div class="global-search-results-layout">
+            <div class="global-search-results-meta global-search-results-meta--reserved" aria-hidden="true"></div>
+            <div class="search-no-results">
+                <div class="search-no-results-text">Start typing to search</div>
+                <div class="search-no-results-hint">Search across videos, games, skills, achievements, and activities</div>
+            </div>
+        </div>`;
 }
 
 function buildGlobalSearchResultsMetaHtml(query, visibleCount, totalCount) {

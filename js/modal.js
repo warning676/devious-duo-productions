@@ -4,7 +4,7 @@ class ModalManager {
         this.galleryLoadId = 0;
         this.modalFadeMs = 180;
         this.modalTransitionToken = 0;
-        this.skillIconPreloadRadius = 2;
+        this.skillIconPreloadRadius = 10;
     }
 
     syncPageScrollLock(locked) {
