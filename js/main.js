@@ -70,26 +70,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         portfolioFilterGroup: null,
         portfolioFilterButton: null,
         portfolioFilterMenu: null,
-        coursesModal: null,
-        coursesModalClose: null,
-        coursesModalPrev: null,
-        coursesModalNext: null,
-        coursesModalTitle: null,
-        coursesModalId: null,
-        coursesModalSchool: null,
-        coursesModalType: null,
-        coursesModalStatus: null,
-        coursesModalGrade: null,
-        coursesModalCredits: null,
-        coursesModalInfo: null,
-        coursesModalProgrammingLanguagesLabel: null,
-        coursesModalProgrammingLanguagesContainer: null,
-        coursesModalFeaturedSection: null,
-        coursesModalFeaturedDesc: null,
-        coursesModalFeaturedLink: null,
-        coursesModalFeaturedLangWrap: null,
-        coursesModalFeaturedLanguages: null,
-        coursesModalFeaturedProjectLangLabel: null,
         selectedCategories: ['all'],
         selectedTools: ['all'],
         selectedSort: null,
@@ -104,11 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         hiddenCourseColumns: {},
         hiddenSkillColumns: {},
         filteredCourses: [],
-        coursesModalUseStandaloneList: false,
-        coursesModalStandaloneList: null,
-        coursesModalClosing: false,
-        disableCourseNavigationFromSkillModal: false,
-        currentCourseIndex: -1,
         currentItemCard: null,
         currentGalleryIndex: 0,
         currentToolsContext: [],
@@ -493,12 +468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.hiddenCourseColumns = {};
         state.hiddenSkillColumns = {};
         state.filteredCourses = [];
-        state.coursesModalUseStandaloneList = false;
-        state.coursesModalStandaloneList = null;
-        state.coursesModalClosing = false;
-        state.disableCourseNavigationFromSkillModal = false;
-        if (state.coursesModal) state.coursesModal.classList.remove('courses-modal-over-modal');
-        state.currentCourseIndex = -1;
         state.searchQuery = '';
         state.courseSearchQuery = '';
         state.currentItemCard = null;
@@ -583,27 +552,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.portfolioFilterGroup = document.getElementById('portfolio-filter-group');
         state.portfolioFilterButton = document.getElementById('portfolio-filter-button');
         state.portfolioFilterMenu = document.getElementById('portfolio-filter-menu');
-        state.coursesModal = document.getElementById('courses-modal');
-        state.coursesModalClose = document.getElementById('courses-modal-close');
-        state.coursesModalPrev = document.getElementById('courses-modal-prev');
-        state.coursesModalNext = document.getElementById('courses-modal-next');
-        state.coursesModalTitle = document.getElementById('courses-modal-title');
-        state.coursesModalId = document.getElementById('courses-modal-id');
-        state.coursesModalSchool = document.getElementById('courses-modal-school');
-        state.coursesModalType = document.getElementById('courses-modal-type');
-        state.coursesModalStatus = document.getElementById('courses-modal-status');
-        state.coursesModalGrade = document.getElementById('courses-modal-grade');
-        state.coursesModalCredits = document.getElementById('courses-modal-credits');
-        state.coursesModalInfo = document.getElementById('courses-modal-info');
-        state.coursesModalProgrammingLanguagesLabel = document.getElementById('courses-modal-programming-languages-label');
-        state.coursesModalProgrammingLanguagesContainer = document.getElementById('courses-modal-programming-languages');
-        state.coursesModalYear = document.getElementById('courses-modal-year');
-        state.coursesModalFeaturedSection = document.getElementById('courses-modal-featured-section');
-        state.coursesModalFeaturedDesc = document.getElementById('courses-modal-featured-desc');
-        state.coursesModalFeaturedLink = document.getElementById('courses-modal-featured-link');
-        state.coursesModalFeaturedLangWrap = document.getElementById('courses-modal-featured-lang-wrap');
-        state.coursesModalFeaturedLanguages = document.getElementById('courses-modal-featured-languages');
-        state.coursesModalFeaturedProjectLangLabel = document.getElementById('courses-modal-featured-project-lang-label');
     };
 
 
@@ -1108,10 +1056,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const toText = (value) => (value ?? '').toString().trim();
 
-    const syncCoursesModalScrollLock = (locked) => {
-        Utils.syncPageScrollLock(!!locked);
-    };
-
     const closeAllColumnFilterMenus = () => {
         document.querySelectorAll('.column-filter-menu.open').forEach(menu => {
             menu.classList.remove('open');
@@ -1130,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelectorAll('.filter-icon-button[aria-expanded="true"]').forEach(button => {
             button.setAttribute('aria-expanded', 'false');
         });
-        syncCoursesModalScrollLock(false);
+        Utils.syncPageScrollLock(false);
         document.querySelectorAll('.custom-select-container.open, .multi-select-container.open').forEach(el => el.classList.remove('open'));
         if (typeof window.syncDropdownScrollLock === 'function') window.syncDropdownScrollLock();
     };
@@ -1231,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         requestAnimationFrame(() => {
             menu.dataset.ignoreSubmenuHover = 'false';
         });
-        syncCoursesModalScrollLock(true);
+        Utils.syncPageScrollLock(true);
         syncDropdownScrollLock();
         requestAnimationFrame(() => positionColumnFilterMenuAtButton(button, menu));
     };
@@ -1748,7 +1692,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             menu.classList.remove('skip-submenu-animation');
             menu.querySelectorAll('.column-filter-item').forEach(node => node.classList.remove('active'));
             button.setAttribute('aria-expanded', 'false');
-            syncCoursesModalScrollLock(false);
+            Utils.syncPageScrollLock(false);
             syncColumnFilterVisualState(button, menu, usableDefinitions, selected, onChange);
             if (typeof window.syncDropdownScrollLock === 'function') window.syncDropdownScrollLock();
         };
@@ -2348,7 +2292,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const opts = options && typeof options === 'object' ? options : {};
         const nonInteractiveSkillName = String(opts.nonInteractiveSkillName || '').trim().toLowerCase();
         const disableSkillModalLinks = opts.disableSkillModalLinks === true;
-        const disableCourseNavigationFromSkillModal = opts.disableCourseNavigationFromSkillModal === true;
         const skills = state.allData && state.allData.skills ? state.allData.skills : [];
         const modalManager = state.modalManager;
         const toolsCtx = Array.isArray(skillToolsContext) && skillToolsContext.length ? skillToolsContext : list;
@@ -2381,9 +2324,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tag.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (!state.openModalForItem) return;
-                    if (disableCourseNavigationFromSkillModal) {
-                        state.disableCourseNavigationFromSkillModal = true;
-                    }
                     state.openModalForItem(skillMatch, 'skill', toolsCtx);
                 });
             }
@@ -2533,15 +2473,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return sorted;
     };
 
-    const getCoursesModalCourseList = () => {
-        if (state.coursesModalUseStandaloneList && Array.isArray(state.coursesModalStandaloneList) && state.coursesModalStandaloneList.length) {
-            return state.coursesModalStandaloneList;
-        }
-        return state.filteredCourses;
-    };
-
-    const getVisibleCourseIndexes = () => getCoursesModalCourseList().map((_, index) => index);
-
     const getCourseStatusBadgeClass = (status) => {
         const value = toText(status).toLowerCase();
         if (value === 'completed') return 'proficiency-beginner';
@@ -2598,133 +2529,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         const suffix = `<span class="courses-name-featured-suffix"><span class="courses-name-featured-icon">${coursesLink2IconSvg}</span><span class="courses-name-featured-label">Featured project</span></span>`;
         return `<span class="courses-name-cell-inner"><span class="courses-name-text">${safeName}</span>${suffix}</span>`;
-    };
-
-    const populateCoursesModal = (index) => {
-        const courseList = getCoursesModalCourseList();
-        if (!courseList.length || index < 0 || index >= courseList.length) return;
-        state.currentCourseIndex = index;
-        const course = courseList[index];
-
-        if (state.coursesModalTitle) state.coursesModalTitle.textContent = course.name || 'Course Details';
-        if (state.coursesModalId) state.coursesModalId.textContent = course.id || '-';
-        if (state.coursesModalSchool) state.coursesModalSchool.textContent = course.school || '-';
-        if (state.coursesModalType) state.coursesModalType.textContent = course.type || '-';
-        if (state.coursesModalStatus) state.coursesModalStatus.innerHTML = buildCourseBadge(course.status || '-', getCourseStatusBadgeClass(course.status));
-        if (state.coursesModalGrade) state.coursesModalGrade.innerHTML = buildCourseBadge(course.grade || '-', getCourseGradeBadgeClass(course.grade));
-        if (state.coursesModalCredits) {
-            if (course.credits) {
-                state.coursesModalCredits.textContent = course.credits;
-                state.coursesModalCredits.style.color = '';
-            } else {
-                state.coursesModalCredits.textContent = '-';
-                state.coursesModalCredits.style.color = '#8b949e';
-            }
-        }
-        if (state.coursesModalYear) state.coursesModalYear.textContent = course.completionYear || course.completionyear || '-';
-        const rawInfo = toText(course.info);
-        const languagesSectionRegex = /Programming Languages Used\s*:\s*([\s\S]*)$/i;
-        const languagesSectionMatch = rawInfo.match(languagesSectionRegex);
-        let infoText = rawInfo;
-        if (languagesSectionMatch) {
-            infoText = rawInfo.replace(languagesSectionRegex, '').trim();
-        }
-
-        if (state.coursesModalInfo) state.coursesModalInfo.textContent = infoText || 'No course information available.';
-
-        const courseModalLangTagOptions = {
-            disableCourseNavigationFromSkillModal: true,
-            ...(state.coursesModal && state.coursesModal.classList.contains('courses-modal-over-modal')
-                ? { disableSkillModalLinks: true }
-                : {})
-        };
-
-        const featuredSection = state.coursesModalFeaturedSection;
-        const featuredDesc = state.coursesModalFeaturedDesc;
-        const featuredLink = state.coursesModalFeaturedLink;
-        const featuredLangWrap = state.coursesModalFeaturedLangWrap;
-        const featuredLangContainer = state.coursesModalFeaturedLanguages;
-        if (featuredSection && featuredDesc && featuredLink) {
-            const projectRow = findCourseProjectRowForCourse(course);
-            const linkRaw = projectRow ? toText(projectRow.link).trim() : '';
-            const hasLink = /^https?:\/\//i.test(linkRaw);
-            const projName = projectRow ? toText(projectRow.name).trim() : '';
-            if (projectRow && hasLink) {
-                const displayName = projName || 'View project';
-                const projInfo = toText(projectRow.info).trim();
-                const projectLangs = parseCourseLanguagesUsedRaw(projectRow.languagesUsed || projectRow.languagesused);
-                featuredSection.classList.add('is-visible');
-                featuredSection.setAttribute('aria-hidden', 'false');
-                if (projInfo) {
-                    featuredDesc.textContent = projInfo;
-                    featuredDesc.style.display = 'block';
-                } else {
-                    featuredDesc.textContent = '';
-                    featuredDesc.style.display = 'none';
-                }
-                if (featuredLangWrap && featuredLangContainer) {
-                    if (projectLangs.length) {
-                        featuredLangWrap.style.display = 'block';
-                        const projLangLabel = state.coursesModalFeaturedProjectLangLabel
-                            || featuredLangWrap.querySelector('.courses-modal-featured-project-lang-label');
-                        if (projLangLabel) {
-                            projLangLabel.textContent = projectLangs.length === 1 ? 'Project Language' : 'Project Languages';
-                        }
-                        if (featuredLangContainer) {
-                            featuredLangContainer.setAttribute(
-                                'aria-label',
-                                projectLangs.length === 1 ? 'Programming language used in featured project' : 'Programming languages used in featured project'
-                            );
-                        }
-                        appendSoftwareLanguageTagsToContainer(featuredLangContainer, projectLangs, projectLangs, courseModalLangTagOptions);
-                    } else {
-                        featuredLangWrap.style.display = 'none';
-                        featuredLangContainer.innerHTML = '';
-                    }
-                }
-                featuredLink.style.setProperty('--inline-action-color', '#58a6ff');
-                featuredLink.innerHTML = `${displayName} ${Utils.lucideChevronRightSvg({ size: 14 })}`;
-                featuredLink.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openExternalLinkWithPrompt(linkRaw, displayName, 'Featured Project', projInfo);
-                };
-            } else {
-                featuredSection.classList.remove('is-visible');
-                featuredSection.setAttribute('aria-hidden', 'true');
-                featuredDesc.textContent = '';
-                featuredDesc.style.display = 'none';
-                if (featuredLangWrap) featuredLangWrap.style.display = 'none';
-                if (featuredLangContainer) featuredLangContainer.innerHTML = '';
-                featuredLink.textContent = '';
-                featuredLink.onclick = null;
-            }
-        }
-
-        let languages = parseCourseLanguagesUsedRaw(course.languagesUsed);
-        if (!languages.length && languagesSectionMatch) {
-            languages = parseCourseLanguagesUsedRaw(languagesSectionMatch[1]);
-        }
-
-        const labelEl = state.coursesModalProgrammingLanguagesLabel;
-        const containerEl = state.coursesModalProgrammingLanguagesContainer;
-        if (labelEl && containerEl) {
-            if (!languages.length) {
-                labelEl.style.display = 'none';
-                containerEl.style.display = 'none';
-                containerEl.innerHTML = '';
-            } else {
-                labelEl.textContent = languages.length === 1 ? 'Course Language' : 'Course Languages';
-                containerEl.setAttribute(
-                    'aria-label',
-                    languages.length === 1 ? 'Programming language used in this course' : 'Programming languages used in this course'
-                );
-                labelEl.style.display = 'block';
-                containerEl.style.display = 'flex';
-                appendSoftwareLanguageTagsToContainer(containerEl, languages, languages, courseModalLangTagOptions);
-            }
-        }
-        updateCoursesModalNavState();
     };
 
     const getLanguageIconUrlsForCourse = (course) => {
@@ -2832,202 +2636,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return state.coursesLanguageIconsPreloadPromise;
     };
 
-    const updateCoursesModalNavState = () => {
-        const canNavigate = getCoursesModalCourseList().length > 1;
-        if (state.coursesModalPrev) {
-            state.coursesModalPrev.style.display = canNavigate ? '' : 'none';
-            state.coursesModalPrev.disabled = !canNavigate;
-        }
-        if (state.coursesModalNext) {
-            state.coursesModalNext.style.display = canNavigate ? '' : 'none';
-            state.coursesModalNext.disabled = !canNavigate;
-        }
-        const content = state.coursesModal ? state.coursesModal.querySelector('.courses-modal-content') : null;
-        if (content) {
-            content.classList.toggle('no-side-padding', !canNavigate);
-        }
-    };
-
-    const clearCoursesModalOverlayState = () => {
-        state.coursesModalUseStandaloneList = false;
-        state.coursesModalStandaloneList = null;
-        if (state.coursesModal) {
-            state.coursesModal.classList.remove('courses-modal-over-modal');
-        }
-    };
-
-    const openCoursesModal = async (index) => {
-        const courseList = getCoursesModalCourseList();
-        if (!state.coursesModal || !courseList.length) return;
-        if (index < 0 || index >= courseList.length) return;
-        state.coursesModalClosing = false;
-
-        await preloadProgrammingLanguageIconsForCourses(state.allData?.Courses || [], state.allData?.['Course Projects'] || []);
-
-        const courseForIcons = courseList[index];
-        if (courseForIcons && state.modalManager) {
-            const iconUrls = getLanguageIconUrlsForCourse(courseForIcons);
-            if (iconUrls.length) {
-                await Promise.all(iconUrls.map((src) => state.modalManager.preloadImage(src, 4000)));
-            }
-        }
-
-        populateCoursesModal(index);
-        updateCoursesModalNavState();
-
-        if (state.coursesModal._closeTimer) {
-            clearTimeout(state.coursesModal._closeTimer);
-            state.coursesModal._closeTimer = null;
-        }
-
-        state.coursesModal.setAttribute('aria-hidden', 'false');
-        syncCoursesModalScrollLock(true);
-        if (state.modalManager && typeof state.modalManager.fadeInModal === 'function') {
-            state.modalManager.fadeInModal(state.coursesModal);
-            state.coursesModal.classList.add('open');
-        } else {
-            state.coursesModal.style.display = 'flex';
-            state.coursesModal.classList.add('open');
-        }
-    };
-
-    const closeCoursesModal = () => {
-        if (!state.coursesModal) return;
-        state.coursesModalClosing = true;
-        state.coursesModal.setAttribute('aria-hidden', 'true');
-
-        if (state.coursesModal._closeTimer) clearTimeout(state.coursesModal._closeTimer);
-        state.coursesModal._closeTimer = null;
-
-        if (state.modalManager?.fadeOutModal) {
-            state.modalManager.fadeOutModal(state.coursesModal, () => {
-                state.coursesModal.classList.remove('open');
-                clearCoursesModalOverlayState();
-                state.coursesModalClosing = false;
-                syncCoursesModalScrollLock(false);
-            });
-            return;
-        }
-
-        state.coursesModal.classList.remove('open');
-        state.coursesModal._closeTimer = setTimeout(() => {
-            if (state.coursesModal) state.coursesModal.style.display = 'none';
-            clearCoursesModalOverlayState();
-            state.coursesModalClosing = false;
-            syncCoursesModalScrollLock(false);
-        }, 190);
-    };
-
-    const openCoursesModalForCourseIdFromSkill = async (courseIdRaw) => {
-        if (!state.coursesModal) return;
-        const lookupKey = normalizeCourseIdForProjectMatch(courseIdRaw);
-        if (!lookupKey) return;
-        const all = normalizeCourses(state.allData?.Courses || []);
-        const course = all.find(c => normalizeCourseIdForProjectMatch(c.id) === lookupKey);
-        if (!course) return;
-        if (state.coursesModalUseStandaloneList && state.coursesModal.classList.contains('open') && !state.coursesModalClosing) {
-            const list = getCoursesModalCourseList();
-            const cur = list[state.currentCourseIndex];
-            if (cur && normalizeCourseIdForProjectMatch(cur.id) === lookupKey) return;
-            state.coursesModalStandaloneList = [course];
-            populateCoursesModal(0);
-            updateCoursesModalNavState();
-            return;
-        }
-        const skillModalStacked =
-            (state.modal && state.modal.style.display === 'flex' && state.modal.classList.contains('modal-skill'))
-            || (state.secModal && state.secModal.style.display === 'flex');
-        if (skillModalStacked) {
-            state.coursesModal.classList.add('courses-modal-over-modal');
-        }
-        state.coursesModalUseStandaloneList = true;
-        state.coursesModalStandaloneList = [course];
-        await openCoursesModal(0);
-    };
-
-    window.closeCoursesModal = closeCoursesModal;
-    window.openCoursesModalForCourseIdFromSkill = openCoursesModalForCourseIdFromSkill;
-
-    const navigateCoursesModal = (delta) => {
-        const visibleIndexes = getVisibleCourseIndexes();
-        if (visibleIndexes.length <= 1 || state.currentCourseIndex < 0) return;
-        const nextIndex = (state.currentCourseIndex + delta + visibleIndexes.length) % visibleIndexes.length;
-        const body = state.coursesModal?.querySelector('.courses-modal-body');
-        const titleWrap = state.coursesModal?.querySelector('.modal-header > div');
-
-        if (!body) {
-            openCoursesModal(nextIndex);
-            return;
-        }
-
-        state.currentCourseIndex = nextIndex;
-
-        const prefersReducedMotion = typeof window !== 'undefined' && window.matchMedia
-            ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            : false;
-
-        const transitionTargets = [titleWrap, body].filter(Boolean);
-        if (!transitionTargets.length) return;
-
-        if (prefersReducedMotion) {
-            transitionTargets.forEach(target => {
-                target.style.transition = '';
-                target.style.willChange = '';
-                target.style.opacity = '';
-                target.style.transform = '';
-            });
-            populateCoursesModal(nextIndex);
-            updateCoursesModalNavState();
-            return;
-        }
-
-        const durationMs = 150;
-        const exitShift = delta >= 0 ? -12 : 12;
-        const enterShift = -exitShift;
-        const token = state.coursesModal._transitionToken = (state.coursesModal._transitionToken || 0) + 1;
-
-        transitionTargets.forEach(target => {
-            target.style.willChange = 'opacity, transform';
-            target.style.transition = `opacity ${durationMs}ms ease, transform ${durationMs}ms ease`;
-            target.style.opacity = '0';
-            target.style.transform = `translate3d(${exitShift}px, 0, 0)`;
-        });
-
-        setTimeout(() => {
-            if (!state.coursesModal || token !== state.coursesModal._transitionToken) return;
-            populateCoursesModal(nextIndex);
-
-            transitionTargets.forEach(target => {
-                target.style.transition = 'none';
-                target.style.opacity = '0';
-                target.style.transform = `translate3d(${enterShift}px, 0, 0)`;
-            });
-
-            requestAnimationFrame(() => {
-                if (!state.coursesModal || token !== state.coursesModal._transitionToken) return;
-                transitionTargets.forEach(target => {
-                    target.style.transition = `opacity ${durationMs}ms ease, transform ${durationMs}ms ease`;
-                    target.style.opacity = '1';
-                    target.style.transform = 'translate3d(0px, 0, 0)';
-                });
-
-                setTimeout(() => {
-                    if (!state.coursesModal || token !== state.coursesModal._transitionToken) return;
-                    transitionTargets.forEach(target => {
-                        target.style.transition = '';
-                        target.style.willChange = '';
-                        target.style.opacity = '';
-                        if (target === body) {
-                            target.style.transform = 'translate3d(0px, 0, 0)';
-                        } else {
-                            target.style.transform = '';
-                        }
-                    });
-                }, durationMs + 30);
-            });
-        }, durationMs);
-    };
-
     const renderCoursesTable = () => {
         if (!state.coursesTableBody) return;
         const coursesShell = state.coursesTableBody.closest('.courses-table-shell');
@@ -3085,10 +2693,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
 
         state.coursesTableBody.querySelectorAll('.course-row').forEach(row => {
-            row.addEventListener('click', () => {
-                const index = Number.parseInt(row.getAttribute('data-course-index') || '-1', 10);
-                if (Number.isFinite(index) && index >= 0) openCoursesModal(index);
-            });
             const primeRowIcons = () => {
                 const index = Number.parseInt(row.getAttribute('data-course-index') || '-1', 10);
                 const course = Number.isFinite(index) && index >= 0 ? courses[index] : null;
@@ -3145,14 +2749,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         state.filteredCourses = sortCourses(filtered);
-        if (state.currentCourseIndex >= state.filteredCourses.length) state.currentCourseIndex = state.filteredCourses.length - 1;
-        if (state.coursesModal?.style.display === 'flex') {
-            if (!state.filteredCourses.length || state.currentCourseIndex < 0) {
-                closeCoursesModal();
-            } else {
-                populateCoursesModal(state.currentCourseIndex);
-            }
-        }
         renderCoursesTable();
     };
 
@@ -3294,7 +2890,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             anchorEl.classList.add('is-flyout-open');
         }
         positionHeaderColumnFilterFlyout(anchorEl, flyout);
-        syncCoursesModalScrollLock(true);
+        Utils.syncPageScrollLock(true);
         syncDropdownScrollLock();
     };
 
@@ -3364,25 +2960,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (externalCancelBtn) externalCancelBtn.onclick = () => closeExternalLinkModal(false);
         if (externalStayBtn) externalStayBtn.onclick = () => closeExternalLinkModal(false);
         if (externalContinueBtn) externalContinueBtn.onclick = () => closeExternalLinkModal(true);
-
-        if (state.coursesModalClose && !state.coursesModalClose.dataset.boundCoursesModal) {
-            state.coursesModalClose.dataset.boundCoursesModal = 'true';
-            state.coursesModalClose.addEventListener('click', closeCoursesModal);
-        }
-        if (state.coursesModalPrev && !state.coursesModalPrev.dataset.boundCoursesModal) {
-            state.coursesModalPrev.dataset.boundCoursesModal = 'true';
-            state.coursesModalPrev.addEventListener('click', (event) => {
-                event.stopPropagation();
-                navigateCoursesModal(-1);
-            });
-        }
-        if (state.coursesModalNext && !state.coursesModalNext.dataset.boundCoursesModal) {
-            state.coursesModalNext.dataset.boundCoursesModal = 'true';
-            state.coursesModalNext.addEventListener('click', (event) => {
-                event.stopPropagation();
-                navigateCoursesModal(1);
-            });
-        }
 
         if (state.prevBtn) {
             state.prevBtn.onclick = (e) => {
@@ -3466,7 +3043,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         '.table-sort-button',
         '.inline-action-button',
         '#modal-tools .software-tag',
-        '.courses-modal-programming-languages .software-tag',
         '.courses-modal-featured-languages .software-tag',
         '.search-type-filters',
         '.modal-header',
@@ -3516,7 +3092,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const leftX = rect.left;
         const rightX = rect.right;
 
-        const localScope = el.closest('.modal-content, .search-modal-content, .external-link-modal-content, .courses-modal-content');
+        const localScope = el.closest('.modal-content, .search-modal-content, .external-link-modal-content');
         let rangeLeft = 0;
         let rangeWidth = Math.max(window.innerWidth || 0, 1);
         if (localScope instanceof HTMLElement) {
@@ -3619,19 +3195,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                     if (e.key === 'Escape') state.modalManager?.resetSecModal();
-                } else if (state.coursesModal && state.coursesModal.style.display === 'flex' && state.coursesModal.classList.contains('courses-modal-over-modal')) {
-                    const courseNavLen = getCoursesModalCourseList().length;
-                    if (courseNavLen > 1) {
-                        if (e.key === 'ArrowLeft') {
-                            navigateCoursesModal(-1);
-                            animateIconHover(state.coursesModalPrev, 'icon-hover-effect-prev');
-                        }
-                        if (e.key === 'ArrowRight') {
-                            navigateCoursesModal(1);
-                            animateIconHover(state.coursesModalNext, 'icon-hover-effect-next');
-                        }
-                    }
-                    if (e.key === 'Escape') closeCoursesModal();
                 } else if (state.modal && state.modal.style.display === 'flex') {
                     if (state.showModalNavArrows) {
                         if (e.key === 'ArrowLeft') {
@@ -3644,19 +3207,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                     if (e.key === 'Escape') state.modalManager?.resetModal();
-                } else if (state.coursesModal && state.coursesModal.style.display === 'flex') {
-                    const courseNavLen = getCoursesModalCourseList().length;
-                    if (courseNavLen > 1) {
-                        if (e.key === 'ArrowLeft') {
-                            navigateCoursesModal(-1);
-                            animateIconHover(state.coursesModalPrev, 'icon-hover-effect-prev');
-                        }
-                        if (e.key === 'ArrowRight') {
-                            navigateCoursesModal(1);
-                            animateIconHover(state.coursesModalNext, 'icon-hover-effect-next');
-                        }
-                    }
-                    if (e.key === 'Escape') closeCoursesModal();
                 }
             });
 
@@ -3694,8 +3244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     state.modalManager?.resetModal();
                 } else if (event.target === state.secModal && modalMousedownTarget === state.secModal) {
                     state.modalManager?.resetSecModal();
-                } else if (event.target === state.coursesModal && modalMousedownTarget === state.coursesModal) {
-                    closeCoursesModal();
                 } else if (event.target === state.externalLinkModal && modalMousedownTarget === state.externalLinkModal) {
                     closeExternalLinkModal(false);
                 }

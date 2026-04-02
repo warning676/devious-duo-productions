@@ -1,6 +1,15 @@
 const LOCAL_DATA = {
     videos: [
         {
+            name: 'BENJAMEISTER BROADCAST (NAP TIME INCLUDED)',
+            badge: 'Assignment',
+            date: 'February 23, 2026',
+            info: 'A video that we were about 75% done editing and forgot about it for 3 years. RidgeCast does not exist anymore...',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'shT_unykQx0',
+            gallery: []
+        },
+        {
             name: 'Toothbrush Chronicles: Super Hill',
             badge: 'Film Festival',
             date: 'May 31, 2025',
@@ -12,6 +21,15 @@ const LOCAL_DATA = {
                 { award: 'Video of the Year', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2025' },
                 { award: 'Best Use of Dialogue', location: 'Rogers High School | 86th Avenue Film Festival', date: 'June 2025' }
             ]
+        },
+        {
+            name: 'PICK A SIDE',
+            badge: 'Assignment',
+            date: 'June 20, 2025',
+            info: 'We made this video for an assignment and completely forgot to upload it to our channel.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'BeojGeeK2ac',
+            gallery: []
         },
         {
             name: 'House of Horrors',
@@ -60,6 +78,15 @@ const LOCAL_DATA = {
             gallery: ['images/video-projects/hill/hill_01.webp', 'images/video-projects/hill/hill_02.webp', 'images/video-projects/hill/hill_03.webp']
         },
         {
+            name: 'Seth on the Street [Ep. 2]',
+            badge: 'Emerald Vision',
+            date: 'October 9, 2024',
+            info: 'A great little sequel to our previous episode. Now featured on Emerald Vision for the whole school to see!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'I8u0nXdRTmM',
+            gallery: []
+        },
+        {
             name: 'Emerald Vision: A Very Devious Christmas',
             badge: 'Emerald Vision',
             date: 'December 18, 2024',
@@ -78,9 +105,27 @@ const LOCAL_DATA = {
             gallery: ['images/video-projects/ev1/ev1_01.webp', 'images/video-projects/ev1/ev1_02.webp', 'images/video-projects/ev1/ev1_03.webp']
         },
         {
+            name: 'Dungeons and Draghills',
+            badge: 'Emerald Vision',
+            date: 'September 26, 2024',
+            info: 'A little segment for Emerald Vision promoting the Dungeons and Dragons school club.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'Ou0BpH42hVk',
+            gallery: []
+        },
+        {
+            name: 'EV Segment #1 Extended Cut',
+            badge: 'Emerald Vision',
+            date: 'September 13, 2024',
+            info: 'We initially made a segment for the first Emerald Vision episode of the school year and ended up creating an extended cut on our channel with the extra footage we had.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'N2bm2L4H_-E',
+            gallery: []
+        },
+        {
             name: 'MrBeast Burger in Ohio (BEN VERSION)',
             badge: 'Film Festival',
-            date: 'January 27, 2023',
+            date: 'September 14, 2023',
             info: 'Our version of our first film festival video. We were surprised we ended up winning this one. The video was uploaded later on YouTube.',
             tools: 'Adobe Premiere Pro',
             youtube: 'aj8aV6UFJ5w',
@@ -90,9 +135,129 @@ const LOCAL_DATA = {
             ]
         },
         {
+            name: 'DANNY P - FORTNITE ANTHEM (FILM FESTIVAL MASTERPIECE)',
+            badge: 'Film Festival',
+            date: 'January 23, 2024',
+            info: 'Yes, this video resembles an oil painting. Yes, this video was pretty fun to make.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'JmOjg_EYCy0',
+            gallery: []
+        },
+        {
+            name: 'America\'s Got Talent - Super Sad Music Video from Devious Duo! (WARNING: YOU MIGHT CRY)',
+            badge: 'Assignment',
+            date: 'December 20, 2023',
+            info: 'Holy moly! That is a long title! This is real, straight from the venue in Los Angeles.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'MlD0JE1lH3k',
+            gallery: []
+        },
+        {
+            name: 'ratatouille shot for shot (Ticklemeister edition)^2*3 (who gave bro blabbering privileges???)/5',
+            badge: 'Assignment',
+            date: 'November 14, 2023',
+            info: 'This video title\'s length represents a spectacularly unnecessary elongation, stretching beyond even the bloated AGT title into a territory of sheer, unmitigated verbal excess. Who gave bro blabbering privileges anyways?',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'P4v7B_g-tMg',
+            gallery: []
+        },
+        {
+            name: 'Shot-For-Shot (Ratatouille)! Totally Spectacular Acting! Why does bro have to babble all script!',
+            badge: 'Assignment',
+            date: 'October 31, 2023',
+            info: 'The preceding title, once a behemoth of lexical expansion, has been reduced to a mere miniature by comparison; it now sits in humble proximity to this new titan of syntactical endurance. In human words, this title is too long.',
+            tools: 'Adobe Premiere Pro',
+            youtube: '7VJjKMXzxZQ',
+            gallery: []
+        },
+        {
+            name: 'Thy Jaguar Is Currently Occupying thy Intersection | What is Your Favorite Song!?',
+            badge: 'Assignment',
+            date: 'October 17, 2023',
+            info: 'This spectacular video demonstrates the interviewing of some particularly familiar fellows.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'YxRAL-NKCW4',
+            gallery: []
+        },
+        {
+            name: 'ER Shorts #4! That\'s a lot of ER Shorts! Shoutout to Dungeons & Dragons!',
+            badge: 'Assignment',
+            date: 'September 27, 2023',
+            info: 'Wow. This video is not even a YouTube Short... more like a YouTube Long! Hahaha... ha. ha. ha... ha. Rumors are I\'m still watching this video...',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'iG-CeWS5gTc',
+            gallery: []
+        },
+        {
+            name: 'Ticklemeister Reactions | NEW EMERALD RIDGE VIDEO!?! *WATCH NOW!*',
+            badge: 'Assignment',
+            date: 'September 14, 2023',
+            info: 'We have evolved into reaction YouTubers.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'OFgWbXlK69I',
+            gallery: []
+        },
+        {
+            name: 'Seth on the Street (now featuring B-roll!) [Ep. 1]',
+            badge: 'Assignment',
+            date: 'September 14, 2023',
+            info: 'Our first Seth on the Street video. Ben was actually missing... for real. I ended up reuploading some old videos at the beginning of my junior year so ignore the date!',
+            tools: 'Adobe Premiere Pro',
+            youtube: '4d6HZhJApJ0',
+            gallery: []
+        },
+        {
+            name: 'Breaking Bad Popcorners Ad Parody',
+            badge: 'Assignment',
+            date: 'September 14, 2023',
+            info: 'The original video! It\'s here!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'xbie8OW3C2I',
+            gallery: []
+        },
+        {
+            name: 'Four High Schoolers Talk About Apples for 3 Minutes and 33 Seconds Totally',
+            badge: 'Film Festival',
+            date: 'September 14, 2023',
+            info: 'This video is one to not be questioned. This took a lot of effort!',
+            tools: 'Adobe Premiere Pro',
+            youtube: '8jViWxCwjhU',
+            gallery: []
+        },
+        {
+            name: 'Ticklemeister Television',
+            badge: 'Assignment',
+            date: 'May 26, 2023',
+            info: 'This is great! Competition for RidgeCast (a now long defunct corporation)!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'U9MxbfvMQfU',
+            gallery: []
+        },
+        {
+            name: 'chase scene (tickle meister special)',
+            badge: 'Assignment',
+            date: 'January 27, 2023',
+            info: 'This is one of the chase scenes of all time for sure.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'foMW5Kro7mk',
+            gallery: []
+        },
+        {
+            name: 'DONT EAT MRBEAST BURGER IN OHIO AT 3AM!!! (SCARY) (TICKLEMEISTER EDITION!!)',
+            badge: 'Film Festival',
+            date: 'January 27, 2023',
+            info: 'An extremely scary video... I have no clue if it was this video that won the award or the other. Both great videos!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 't5WZYeNao3k',
+            gallery: [],
+            awards: [
+                { award: 'Video of the Year', location: 'Rogers High School | 86th Avenue Film Festival', date: 'January 2023' }
+            ]
+        },
+        {
             name: 'PopCorners V2',
             badge: 'Assignment',
-            date: 'June 16, 2023',
+            date: 'September 14, 2023',
             info: 'A recreation of an older video we used to fill in for a grade. The video was uploaded later on YouTube.',
             tools: 'Adobe Premiere Pro',
             youtube: 'HuvDKhqiqAw',
@@ -106,6 +271,87 @@ const LOCAL_DATA = {
             tools: 'Adobe Premiere Pro',
             youtube: 'KK6KzJO9T_U',
             gallery: ['images/video-projects/detective/detective_01.webp', 'images/video-projects/detective/detective_02.webp', 'images/video-projects/detective/detective_03.webp']
+        },
+        {
+            name: 'Uncovering the TRUE mystery of Emerald Ridge High School: The truth of Craig Hill',
+            badge: 'Assignment',
+            date: 'February 23, 2024',
+            info: 'Interview style video we made for an assignment. Cool stuff. This is Seth\'s version.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'fMtxfNNP8Uc',
+            gallery: []
+        },
+        {
+            name: 'Lens of Creation (Dark Craig Hill\'s Theme)',
+            badge: 'Assignment',
+            date: 'April 25, 2024',
+            info: 'We "created" this song for Craig of the Hills and never ended up actually using it!',
+            tools: 'Adobe Premiere Pro',
+            youtube: '_iIHJmxDvwY',
+            gallery: []
+        },
+        {
+            name: 'Why you should probably turn in your assignments at the start of the semester!',
+            badge: 'Assignment',
+            date: 'February 3, 2024',
+            info: 'This applies to anywhere in life! Great life advice!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'F9vIPIh-WBI',
+            gallery: []
+        },
+        {
+            name: 'Bollin Boung\'s Bacon Bites (ER Shorts #6?????) HOW MANY B\'S DID YOU RECALL COMMENT BELOW!!',
+            badge: 'Assignment',
+            date: 'November 7, 2023',
+            info: 'I am sure not commenting below because I don\'t know!',
+            tools: 'Adobe Premiere Pro',
+            youtube: '-3LrxuraOm8',
+            gallery: []
+        },
+        {
+            name: 'Thanksgiving Jag Short #???(I lost count) (medium nostalgia warning)',
+            badge: 'Assignment',
+            date: 'November 7, 2023',
+            info: 'I\'m getting goosebumps from the nostalgia on this one!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'lYdMC0vwgow',
+            gallery: []
+        },
+        {
+            name: 'ER Shorts (FINALLY A SHORT?!) TOP 5 THINGS TO DO WHEN OFF OF SCHOOL SPECIFICALLY ON THE 20TH OF OCTOBER',
+            badge: 'Assignment',
+            date: 'October 4, 2023',
+            info: 'Phew! That is a long title! What happens now when I\'m off of school every day!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'MVS0j3uvUmc',
+            gallery: []
+        },
+        {
+            name: 'ER short #3??? CHAT ARE YOU TIRED OF THIS TOMFOOLERY?!',
+            badge: 'Assignment',
+            date: 'September 20, 2023',
+            info: 'I sure am. I love writing out all these unique descriptions!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'z3pDouJD12E',
+            gallery: []
+        },
+        {
+            name: 'ER Shorts Number 2!? | IS THIS REAL CHAT???',
+            badge: 'Assignment',
+            date: 'September 14, 2023',
+            info: 'It\'s real... like a reel. Great video.',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'rMSbmVL8Yw4',
+            gallery: []
+        },
+        {
+            name: 'ER Social Media Post',
+            badge: 'Assignment',
+            date: 'September 14, 2023',
+            info: 'Our first short! Too bad it was just used to improve my terrible grade!',
+            tools: 'Adobe Premiere Pro',
+            youtube: 'JYtnpHf67KE',
+            gallery: []
         },
         {
             name: 'The Grade Collector',

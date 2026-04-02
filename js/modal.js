@@ -658,38 +658,11 @@ class ModalManager {
                 card.appendChild(span);
             }
             if (courseId) {
-                const shouldDisableCourseNav = !!(
-                    s.disableCourseNavigationFromSkillModal
-                    || (s.coursesModal && s.coursesModal.style.display === 'flex')
-                );
-                if (shouldDisableCourseNav) {
-                    const courseText = document.createElement('span');
-                    courseText.className = 'software-tag modal-skill-course-project-course-id-below modal-skill-course-project-course-id-static';
-                    courseText.textContent = courseId;
-                    courseText.setAttribute('aria-disabled', 'true');
-                    card.appendChild(courseText);
-                } else {
-                    const courseBtn = document.createElement('button');
-                    courseBtn.type = 'button';
-                    courseBtn.className = 'inline-action-button courses-modal-featured-link modal-skill-course-project-course-id-below';
-                    courseBtn.innerHTML = `${courseId} ${Utils.lucideChevronRightSvg({ size: 14 })}`;
-                    courseBtn.style.setProperty('--inline-action-color', '#58a6ff');
-                    courseBtn.setAttribute('aria-label', `Open course ${courseId} on the Courses page`);
-                    courseBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const opener = typeof window !== 'undefined' ? window.openCoursesModalForCourseIdFromSkill : null;
-                        if (typeof opener === 'function') {
-                            opener(courseId);
-                        } else if (typeof window.navigateToSearchResult === 'function') {
-                            if (typeof this.dismissPortfolioModalsForNavigation === 'function') {
-                                this.dismissPortfolioModalsForNavigation();
-                            }
-                            window.navigateToSearchResult('/courses', courseId, 'course');
-                        }
-                    });
-                    card.appendChild(courseBtn);
-                }
+                const courseText = document.createElement('span');
+                courseText.className = 'software-tag modal-skill-course-project-course-id-below modal-skill-course-project-course-id-static';
+                courseText.textContent = courseId;
+                courseText.setAttribute('aria-disabled', 'true');
+                card.appendChild(courseText);
             }
             if (projInfo) {
                 const p = document.createElement('p');
