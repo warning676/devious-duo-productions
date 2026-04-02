@@ -136,17 +136,90 @@ class Utils {
         return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${cls}"><path d="m9 18 6-6-6-6"/></svg>`;
     }
 
+    static getScrollbarWidth() {
+        const html = document.documentElement;
+        if (!html) return 0;
+        return Math.max(0, window.innerWidth - html.clientWidth);
+    }
+
+    static getScrollLockOffsetTargets() {
+        const targets = [];
+        document.querySelectorAll('[data-scroll-lock-offset]').forEach(el => {
+            if (!targets.includes(el)) targets.push(el);
+        });
+        return targets;
+    }
+
+    static applyScrollLockCompensation() {
+        const body = document.body;
+        const html = document.documentElement;
+        if (!body || !html) return;
+        const width = `${Utils.getScrollbarWidth()}px`;
+        html.style.setProperty('--scrollbar-width', width);
+        Utils.getScrollLockOffsetTargets().forEach(el => {
+            el.style.setProperty('padding-right', width, 'important');
+        });
+    }
+
+    static clearScrollLockCompensation() {
+        const body = document.body;
+        const html = document.documentElement;
+        if (!body || !html) return;
+        Utils.getScrollLockOffsetTargets().forEach(el => {
+            el.style.removeProperty('padding-right');
+        });
+        html.style.removeProperty('--scrollbar-width');
+    }
+
+    static freezeHeaderForScrollLock() {
+        const header = document.querySelector('body > header');
+        if (!header || header.dataset.scrollLockFrozen === '1') return;
+        const rect = header.getBoundingClientRect();
+        const computed = window.getComputedStyle(header);
+        const marginBottom = Number.parseFloat(computed.marginBottom || '0') || 0;
+        const spacer = document.createElement('div');
+        spacer.setAttribute('data-scroll-lock-header-spacer', '1');
+        spacer.style.height = `${Math.ceil(header.offsetHeight + marginBottom)}px`;
+        spacer.style.width = '100%';
+        spacer.style.pointerEvents = 'none';
+        header.parentNode?.insertBefore(spacer, header);
+
+        header.dataset.scrollLockFrozen = '1';
+        header.style.setProperty('position', 'fixed', 'important');
+        header.style.setProperty('top', `${Math.round(rect.top)}px`, 'important');
+        header.style.setProperty('left', `${Math.round(rect.left)}px`, 'important');
+        header.style.setProperty('width', `${Math.round(rect.width)}px`, 'important');
+        header.style.setProperty('margin', '0', 'important');
+        header.style.setProperty('z-index', '1100', 'important');
+    }
+
+    static unfreezeHeaderForScrollLock() {
+        const header = document.querySelector('body > header');
+        if (!header || header.dataset.scrollLockFrozen !== '1') return;
+        delete header.dataset.scrollLockFrozen;
+        header.style.removeProperty('position');
+        header.style.removeProperty('top');
+        header.style.removeProperty('left');
+        header.style.removeProperty('width');
+        header.style.removeProperty('margin');
+        header.style.removeProperty('z-index');
+
+        const spacer = document.querySelector('[data-scroll-lock-header-spacer="1"]');
+        if (spacer && spacer.parentNode) spacer.parentNode.removeChild(spacer);
+    }
+
     static syncPageScrollLock(locked) {
         const body = document.body;
         const html = document.documentElement;
         if (!body || !html) return;
 
         if (locked) {
+            Utils.freezeHeaderForScrollLock();
+            Utils.applyScrollLockCompensation();
             body.style.setProperty('overflow', 'hidden', 'important');
             html.style.setProperty('overflow', 'hidden', 'important');
             body.classList.add('scroll-lock');
             html.classList.add('scroll-lock');
-            body.classList.add('modal-open');
             return;
         }
 
@@ -157,17 +230,23 @@ class Utils {
             { id: 'external-link-modal', check: (el) => el.classList.contains('active') || el.style.display === 'flex' }
         ];
 
-        const anyOpen = modals.some(m => {
+        const anyModalOpen = modals.some(m => {
             const el = document.getElementById(m.id);
             return el && m.check(el);
-        }) || !!document.querySelector('.custom-select-container.open, .multi-select-container.open, .column-filter-menu.open');
+        });
+        const anyDropdownOpen = !!document.querySelector('.custom-select-container.open, .multi-select-container.open, .column-filter-menu.open');
 
-        if (anyOpen) return;
+        if (anyModalOpen || anyDropdownOpen) {
+            Utils.freezeHeaderForScrollLock();
+            Utils.applyScrollLockCompensation();
+            return;
+        }
 
+        Utils.unfreezeHeaderForScrollLock();
         body.style.removeProperty('overflow');
         html.style.removeProperty('overflow');
+        Utils.clearScrollLockCompensation();
         body.classList.remove('scroll-lock');
         html.classList.remove('scroll-lock');
-        body.classList.remove('modal-open');
     }
 }

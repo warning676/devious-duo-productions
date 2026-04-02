@@ -253,7 +253,7 @@ class ModalManager {
     buildGallerySkeletons(gallery, count) {
         if (!gallery || count <= 0) return;
         gallery.innerHTML = '';
-        const skeleton = '<div class="gallery-skeleton"></div>';
+        const skeleton = '<div class="gallery-skeleton skeleton-element"></div>';
         for (let i = 0; i < count; i++) {
             gallery.insertAdjacentHTML('beforeend', skeleton);
         }

@@ -421,16 +421,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    const updateNavActive = (route) => {
-        document.querySelectorAll('.nav-links a').forEach(link => {
+    const updateNavActive = (route, options = {}) => {
+        const { animate = true } = options;
+        const links = Array.from(document.querySelectorAll('.nav-links a'));
+        if (!links.length) return;
+
+        let targetLink = null;
+        links.forEach((link) => {
             const linkRoute = link.getAttribute('data-route');
-            if (!linkRoute) {
-                link.classList.remove('active');
-                return;
-            }
-            if (linkRoute === route) link.classList.add('active');
-            else link.classList.remove('active');
+            if (linkRoute && linkRoute === route) targetLink = link;
         });
+
+        const currentActive = links.find(link => link.classList.contains('active')) || null;
+
+        if (!animate || !currentActive || currentActive === targetLink) {
+            links.forEach((link) => {
+                const linkRoute = link.getAttribute('data-route');
+                link.classList.remove('active-fade-in', 'active-fade-out');
+                if (!linkRoute) {
+                    link.classList.remove('active');
+                    return;
+                }
+                if (linkRoute === route) link.classList.add('active');
+                else link.classList.remove('active');
+            });
+            return;
+        }
+
+        links.forEach((link) => {
+            if (link !== currentActive && link !== targetLink) {
+                link.classList.remove('active', 'active-fade-in', 'active-fade-out');
+            }
+        });
+
+        currentActive.classList.remove('active-fade-in');
+        currentActive.classList.add('active-fade-out');
+        currentActive.classList.remove('active');
+
+        if (currentActive._navActiveFadeTimer) {
+            clearTimeout(currentActive._navActiveFadeTimer);
+        }
+        currentActive._navActiveFadeTimer = setTimeout(() => {
+            currentActive.classList.remove('active-fade-out');
+            currentActive._navActiveFadeTimer = null;
+        }, 300);
+
+        if (targetLink) {
+            targetLink.classList.remove('active-fade-out');
+            targetLink.classList.add('active-fade-in');
+            targetLink.classList.add('active');
+
+            if (targetLink._navActiveFadeTimer) {
+                clearTimeout(targetLink._navActiveFadeTimer);
+            }
+            targetLink._navActiveFadeTimer = setTimeout(() => {
+                targetLink.classList.remove('active-fade-in');
+                targetLink._navActiveFadeTimer = null;
+            }, 300);
+        }
     };
 
     const resetPageState = () => {
@@ -3353,11 +3401,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const syncDropdownScrollLock = () => {
         const hasOpenDropdown = !!document.querySelector('.custom-select-container.open, .multi-select-container.open, .column-filter-menu.open');
         if (hasOpenDropdown) {
+            Utils.freezeHeaderForScrollLock();
             document.body.classList.add('dropdown-scroll-lock');
             document.documentElement.classList.add('dropdown-scroll-lock');
+            Utils.applyScrollLockCompensation();
         } else {
             document.body.classList.remove('dropdown-scroll-lock');
             document.documentElement.classList.remove('dropdown-scroll-lock');
+            if (document.body.classList.contains('scroll-lock') || document.documentElement.classList.contains('scroll-lock')) {
+                Utils.applyScrollLockCompensation();
+            } else {
+                Utils.unfreezeHeaderForScrollLock();
+                Utils.clearScrollLockCompensation();
+            }
         }
     };
 
@@ -3366,6 +3422,169 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeOpenSelectDropdowns = () => {
         document.querySelectorAll('.custom-select-container.open, .multi-select-container.open').forEach(el => el.classList.remove('open'));
         syncDropdownScrollLock();
+    };
+
+    const syncNavBlurState = () => {
+        const isAwayFromTop = (window.scrollY || window.pageYOffset || 0) > 1;
+        document.querySelectorAll('header, #shared-header, header[data-include="nav.html"], header[data-include="html/nav.html"]').forEach((el) => {
+            if (!(el instanceof HTMLElement)) return;
+            el.classList.toggle('nav-blur-active', isAwayFromTop);
+        });
+    };
+
+    const positionalAccentSelector = [
+        'header',
+        'header[data-include="nav.html"]',
+        'header[data-include="html/nav.html"]',
+        'footer.page-footer',
+        'footer[data-include="footer.html"]',
+        'footer[data-include="html/footer.html"]',
+        '.nav-brand',
+        '.nav-brand img',
+        '.nav-brand span',
+        '.nav-links a',
+        '.search-trigger-btn',
+        '.modal-nav-btn',
+        '.sec-modal-nav-btn',
+        '.custom-input',
+        '.custom-select-trigger',
+        '.multi-select-trigger',
+        '.custom-select-dropdown',
+        '.multi-select-dropdown',
+        '.gallery-toggle',
+        '.gallery-container-wrapper',
+        '.gallery-nav-btn',
+        '.external-link-btn',
+        '.search-close-btn',
+        '.input-clear-button',
+        '.search-result-item',
+        '.search-result-media',
+        '.filter-icon-button',
+        '.column-filter-menu',
+        '.column-filter-submenu',
+        '.column-filter-clear-button',
+        '.table-sort-button',
+        '.inline-action-button',
+        '#modal-tools .software-tag',
+        '.courses-modal-programming-languages .software-tag',
+        '.courses-modal-featured-languages .software-tag',
+        '.search-type-filters',
+        '.modal-header',
+        '.modal-media-pane',
+        '.search-header',
+        '.screenshot-gallery img.selected',
+        '.video-thumb-btn.selected',
+        '.software-tag',
+        '.search-result-match',
+        '.multi-select-item input[type="checkbox"]',
+        '.column-filter-value-row input[type="checkbox"]',
+        '.search-type-filter-item input[type="checkbox"]'
+    ].join(', ');
+
+    const clamp01 = (value) => {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 0;
+        if (n < 0) return 0;
+        if (n > 1) return 1;
+        return n;
+    };
+
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const getAccentRgbAt = (t) => {
+        const ratio = clamp01(t);
+        return {
+            r: Math.round(lerp(255, 0, ratio)),
+            g: Math.round(lerp(31, 102, ratio)),
+            b: Math.round(lerp(31, 255, ratio))
+        };
+    };
+
+    const brightenColor = (r, g, b, amount) => {
+        const t = clamp01(amount);
+        return {
+            r: Math.round(lerp(r, 255, t)),
+            g: Math.round(lerp(g, 255, t)),
+            b: Math.round(lerp(b, 255, t))
+        };
+    };
+
+    const updateElementPositionalAccent = (el) => {
+        if (!(el instanceof HTMLElement)) return;
+        const rect = el.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const leftX = rect.left;
+        const rightX = rect.right;
+
+        const localScope = el.closest('.modal-content, .search-modal-content, .external-link-modal-content, .courses-modal-content');
+        let rangeLeft = 0;
+        let rangeWidth = Math.max(window.innerWidth || 0, 1);
+        if (localScope instanceof HTMLElement) {
+            const scopeRect = localScope.getBoundingClientRect();
+            rangeLeft = scopeRect.left;
+            rangeWidth = Math.max(scopeRect.width, 1);
+        }
+
+        const tStart = clamp01((leftX - rangeLeft) / rangeWidth);
+        const tEnd = clamp01((rightX - rangeLeft) / rangeWidth);
+        const tCenter = clamp01((centerX - rangeLeft) / rangeWidth);
+
+        const start = getAccentRgbAt(tStart);
+        const end = getAccentRgbAt(tEnd);
+        const center = getAccentRgbAt(tCenter);
+
+        const hoverStart = brightenColor(start.r, start.g, start.b, 0.18);
+        const hoverEnd = brightenColor(end.r, end.g, end.b, 0.18);
+        const hoverCenter = brightenColor(center.r, center.g, center.b, 0.18);
+
+        el.style.setProperty('--pos-accent-start', `rgb(${start.r}, ${start.g}, ${start.b})`);
+        el.style.setProperty('--pos-accent-end', `rgb(${end.r}, ${end.g}, ${end.b})`);
+        el.style.setProperty('--pos-accent-soft-start', `rgba(${start.r}, ${start.g}, ${start.b}, 0.42)`);
+        el.style.setProperty('--pos-accent-soft-end', `rgba(${end.r}, ${end.g}, ${end.b}, 0.42)`);
+        el.style.setProperty('--pos-accent-bg-start', `rgba(${start.r}, ${start.g}, ${start.b}, 0.12)`);
+        el.style.setProperty('--pos-accent-bg-end', `rgba(${end.r}, ${end.g}, ${end.b}, 0.12)`);
+
+        el.style.setProperty('--pos-accent', `rgb(${center.r}, ${center.g}, ${center.b})`);
+        el.style.setProperty('--pos-accent-soft', `rgba(${center.r}, ${center.g}, ${center.b}, 0.42)`);
+        el.style.setProperty('--pos-accent-bg', `rgba(${center.r}, ${center.g}, ${center.b}, 0.14)`);
+
+        el.style.setProperty('--pos-accent-hover-start', `rgb(${hoverStart.r}, ${hoverStart.g}, ${hoverStart.b})`);
+        el.style.setProperty('--pos-accent-hover-end', `rgb(${hoverEnd.r}, ${hoverEnd.g}, ${hoverEnd.b})`);
+        el.style.setProperty('--pos-accent-hover-soft-start', `rgba(${hoverStart.r}, ${hoverStart.g}, ${hoverStart.b}, 0.48)`);
+        el.style.setProperty('--pos-accent-hover-soft-end', `rgba(${hoverEnd.r}, ${hoverEnd.g}, ${hoverEnd.b}, 0.48)`);
+
+        el.style.setProperty('--pos-accent-hover', `rgb(${hoverCenter.r}, ${hoverCenter.g}, ${hoverCenter.b})`);
+        el.style.setProperty('--pos-accent-hover-soft', `rgba(${hoverCenter.r}, ${hoverCenter.g}, ${hoverCenter.b}, 0.48)`);
+    };
+
+    let positionalAccentRaf = 0;
+    let positionalAccentObserver = null;
+
+    const applyPositionalAccents = () => {
+        document.querySelectorAll(positionalAccentSelector).forEach(updateElementPositionalAccent);
+    };
+
+    const requestPositionalAccentUpdate = () => {
+        if (positionalAccentRaf) return;
+        positionalAccentRaf = window.requestAnimationFrame(() => {
+            positionalAccentRaf = 0;
+            applyPositionalAccents();
+        });
+    };
+
+    const initializePositionalAccents = () => {
+        requestPositionalAccentUpdate();
+        window.addEventListener('resize', requestPositionalAccentUpdate);
+        window.addEventListener('scroll', requestPositionalAccentUpdate, { passive: true });
+        if (typeof MutationObserver === 'function' && document.body) {
+            positionalAccentObserver = new MutationObserver(() => requestPositionalAccentUpdate());
+            positionalAccentObserver.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class', 'style']
+            });
+        }
     };
 
 
@@ -3816,6 +4035,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 root.innerHTML = '';
                 root.replaceChildren(...nextRoot.childNodes);
                 initializePage(route);
+                if (scroll) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                syncNavBlurState();
             };
 
             if (!initialRouteHydrated) {
@@ -3833,6 +4054,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 errorDiv.innerHTML = '<h2>Page not found</h2><p>The page could not be loaded.</p>';
                 root.appendChild(errorDiv);
                 initializePage('/');
+                if (scroll) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                syncNavBlurState();
             };
 
             if (!initialRouteHydrated) {
@@ -3879,6 +4102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await injectSharedHeaderFooter();
 
+    syncNavBlurState();
+    window.addEventListener('scroll', syncNavBlurState, { passive: true });
+    window.addEventListener('resize', syncNavBlurState);
+
     updateNavLinks();
 
     setupExternalLinkTriggers();
@@ -3905,6 +4132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
 
             const shouldForceMobileNav = () => {
+                if (window.matchMedia('(min-width: 1200px)').matches) return false;
                 if (window.matchMedia('(max-width: 900px)').matches) return true;
                 const hadForcedClass = navContainer?.classList.contains('nav-force-mobile');
                 if (hadForcedClass) navContainer.classList.remove('nav-force-mobile');
@@ -3987,6 +4215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
     setupMobileNav();
+    initializePositionalAccents();
 
     updateNavActive(resolveRoute(window.location.pathname));
     ensureGlobalEvents();
@@ -4010,9 +4239,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const initialUrl = new URL(window.location.href);
     const initialRoute = resolveRoute(initialUrl.pathname);
     loadRoute(initialRoute, initialUrl.search, { push: false });
+    requestPositionalAccentUpdate();
 
     window.addEventListener('popstate', () => {
         const url = new URL(window.location.href);
         loadRoute(resolveRoute(url.pathname), url.search, { push: false });
+        requestPositionalAccentUpdate();
     });
 });

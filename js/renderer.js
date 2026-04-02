@@ -186,7 +186,7 @@ class Renderer {
                         thumbSrc = galleryThumb;
                     }
 
-                    const displayDate = project.date ? Utils.formatFullDate(project.date).toUpperCase() : '';
+                    const displayDate = project.date ? Utils.formatFullDate(project.date) : '';
                     const dateHTML = displayDate ? `<p class="card-meta-date">${displayDate}</p>` : '';
                     const badgeHTML = project.badge ? `<span class="type-badge">${project.badge}</span>` : '';
                     
